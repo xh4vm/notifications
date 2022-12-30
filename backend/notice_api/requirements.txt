@@ -1,0 +1,12 @@
+backoff==2.1.2
+loguru==0.6.0
+fastapi==0.85.0
+orjson==3.8.0
+uvicorn==0.18.3
+uvloop==0.17.0
+pydantic==1.10.2
+pydantic-env==0.2.0
+python-dotenv==0.21.0
+aio-pika==8.2.5
+fastavro==1.7.0
+gunicorn==20.1.0
