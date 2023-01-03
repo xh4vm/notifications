@@ -148,4 +148,3 @@ commands.md
 *__pycache__
 .env
 ./backend/*/.dockerignore
-#/backend/rabbitmq/.erlang.cookie

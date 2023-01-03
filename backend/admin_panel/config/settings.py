@@ -111,4 +111,37 @@ MEDIA_ROOT = Path.joinpath(BASE_DIR, 'media')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# LOCALE_PATHS = ['movies/locale']
+
+# CELERY
+# amqp://user:pass@host:5672/vhost
+CELERY_BROKER_URL = '{0}{1}:{2}@{3}:{4}{5}'.format(
+    environ.get('CELERY_BROKER_NAME', 'pyamqp://'),
+    environ.get('RABBITMQ_DEFAULT_USER', None),
+    environ.get('RABBITMQ_DEFAULT_PASS', None),
+    environ.get('RABBITMQ_HOST', 'localhost'),
+    environ.get('RABBITMQ_PORT', 5672),
+    environ.get('RABBITMQ_DEFAULT_VHOST', '/'),
+)
+
+# CELERY_RESULT_BACKEND = '{0}{1}:{2}@{3}:{4}/{5}'.format(
+#     environ.get('CELERY_RESULT_BACKEND', 'db+postgresql://'),
+#     environ.get('NOTICE_DB_USER', None),
+#     environ.get('NOTICE_DB_PASSWORD', None),
+#     environ.get('NOTICE_DB_HOST', 'localhost'),
+#     environ.get('NOTICE_DB_PORT', 5432),
+#     environ.get('NOTICE_DB_NAME', None),
+# )
+
+
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# CELERY_BEAT_SCHEDULE = {
+#     'queue_every_five_mins': {
+#         'task': 'polls.tasks.query_every_five_mins',
+#         'schedule': crontab(minute=5),
+#     },
+# }
+
+CELERY_DAYS_PERIOD_OF_NEWS = environ.get('CELERY_DAYS_PERIOD_OF_NEWS', 7)
