@@ -114,6 +114,24 @@ services:
     depends_on:
       - haproxy
 
+  notice_db:
+    container_name: notice_db
+    hostname: notice_db
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: $NOTICE_DB_PASSWORD
+      POSTGRES_USER: $NOTICE_DB_USER
+      POSTGRES_DB: $NOTICE_DB_NAME
+    restart: always
+    ports:
+      - "5432:5432"
+    <<: *base_service
+    volumes:
+      - notice_db_volume:/var/lib/postgresql/data
+    profiles:
+      - notice
+      - admin_panel
+
   nginx:
     <<: *base_service
     image: nginx:1.23.1-alpine
@@ -140,3 +158,4 @@ networks:
 volumes:
     rabbitmq_data:
     rabbitmq_log:
+    notice_db_volume:

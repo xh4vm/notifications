@@ -9,8 +9,6 @@ readme = "README.md"
 python = "^3.10"
 flake8 = "^6.0.0"
 
-
-
 [tool.poetry.group.build.dependencies]
 backoff = "2.2.1"
 loguru = "0.6.0"
@@ -24,6 +22,11 @@ python-dotenv = "0.21.0"
 aio-pika = "8.2.5"
 pre-commit = ">=2.19.0"
 
+[tool.poetry.group.admin_panel.dependencies]
+django = "4.0.8"
+django-split-settings="1.1.0"
+django-debug-toolbar="3.5.0"
+psycopg2-binary="2.9.3"
 
 [tool.poetry.group.linters.dependencies]
 mypy = "^0.991"
