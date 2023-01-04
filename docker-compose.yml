@@ -1,0 +1,161 @@
+version: '3.8'
+
+x-base-service: &base_service
+  networks:
+    - notice
+
+x-base-rabbitmq: &base_rabbitmq
+    volumes:
+      - ./backend/rabbitmq/.erlang.cookie:/var/lib/rabbitmq/.erlang.cookie
+      - ./backend/rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq
+    entrypoint: /usr/local/bin/cluster-entrypoint.sh
+
+services:
+  rabbitmq1:
+    <<: *base_service
+    container_name: rabbitmq1
+    image: rabbitmq:3.11.5-management
+    hostname: rabbitmq1
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_DEFAULT_VHOST}
+    <<: *base_rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    profiles:
+      - notice
+      - rabbitmq
+
+  rabbitmq2:
+    <<: *base_service
+    container_name: rabbitmq2
+    image: rabbitmq:3.11.5-management
+    hostname: rabbitmq2
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    environment:
+      - JOIN_CLUSTER_HOST=rabbitmq1
+    <<: *base_rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    profiles:
+      - notice
+      - rabbitmq
+
+  rabbitmq3:
+    <<: *base_service
+    container_name: rabbitmq3
+    image: rabbitmq:3.11.5-management
+    hostname: rabbitmq3
+    depends_on:
+      rabbitmq2:
+        condition: service_healthy
+    environment:
+      - JOIN_CLUSTER_HOST=rabbitmq1
+    <<: *base_rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    profiles:
+      - notice
+      - rabbitmq
+
+  haproxy:
+    <<: *base_service
+    container_name: haproxy
+    hostname: haproxy
+    image: haproxy:1.7
+    volumes:
+      - ./backend/rabbitmq/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+    ports:
+      - 15672:15672
+      - 5672:5672
+    profiles:
+      - notice
+      - rabbitmq
+
+  notice-api:
+    <<: *base_service
+    build: ./backend/notice_api
+    container_name: notice-api
+    env_file: .env
+    profiles:
+      - notice
+    expose:
+      - ${PROJECT_NOTICE_API_PORT}
+    volumes:
+      - ./backend/notice_api:/opt/content
+      - ./backend/notice_api/static/info.log:/var/log/feedbacks/info.log
+      - ./backend/notice_api/static/error.log:/var/log/feedbacks/error.log
+    healthcheck:
+      test: curl http://notice-api:${PROJECT_NOTICE_API_PORT} >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 3s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - haproxy
+
+  notice_db:
+    container_name: notice_db
+    hostname: notice_db
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: $NOTICE_DB_PASSWORD
+      POSTGRES_USER: $NOTICE_DB_USER
+      POSTGRES_DB: $NOTICE_DB_NAME
+    restart: always
+    ports:
+      - "5432:5432"
+    <<: *base_service
+    volumes:
+      - notice_db_volume:/var/lib/postgresql/data
+    profiles:
+      - notice
+      - admin_panel
+
+  nginx:
+    <<: *base_service
+    image: nginx:1.23.1-alpine
+    container_name: nginx
+    env_file: .env
+    profiles:
+      - notice
+    depends_on:
+      notice-api:
+        condition: service_healthy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - ./nginx/static/errors:/var/www/errors/:ro
+      - ./nginx/static/log/access_log:/var/log/nginx/access.log:rw
+      - ./nginx/static/log/error_log:/var/log/nginx/error.log:rw
+    ports:
+      - ${PROJECT_NOTICE_API_PORT}:${PROJECT_NOTICE_API_PORT}
+
+networks:
+  notice:
+    driver: bridge
+
+volumes:
+    rabbitmq_data:
+    rabbitmq_log:
+    notice_db_volume:
