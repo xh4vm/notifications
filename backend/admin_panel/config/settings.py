@@ -3,6 +3,7 @@
 from os import environ
 from pathlib import Path
 
+from config.components.constants import URL_SCHEME
 from dotenv import load_dotenv
 from split_settings.tools import include
 
@@ -145,3 +146,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 # }
 
 CELERY_DAYS_PERIOD_OF_NEWS = environ.get('CELERY_DAYS_PERIOD_OF_NEWS', 7)
+
+NOTICE_API_ENTRYPOINT = '{0}{1}:{2}{3}/{4}/{5}'.format(
+    URL_SCHEME,
+    environ.get('PROJECT_NOTICE_API_HOST', 'localhost'),
+    environ.get('PROJECT_NOTICE_API_PORT', 8000),
+    environ.get('PROJECT_NOTICE_API_PATH', '/api'),
+    environ.get('PROJECT_NOTICE_API_VERSION', 'v1'),
+    environ.get('NOTICE_API_ENTRYPOINT', 'events'),
+)

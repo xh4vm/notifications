@@ -1,4 +1,5 @@
 """ Model Like. """
+from datetime import datetime
 
 from .base import BaseMixin
 
@@ -17,7 +18,13 @@ class EventFromAdmin(BaseMixin):
 
 class NewLikesOfReview(BaseMixin):
     user_id: str
+    film_id: str
     likes: list[str]
+
+
+class NewReviewsLikes(BaseMixin):
+    request_date: datetime
+    new_reviews_likes: list[NewLikesOfReview]
 
 
 class FilmInBookmark(BaseMixin):
@@ -26,6 +33,7 @@ class FilmInBookmark(BaseMixin):
 
 
 class NewFilmsForPeriod(BaseMixin):
+    period_days: int
     films: list[str]
 
 
@@ -33,5 +41,5 @@ class EventMovies(BaseMixin):
     """ Class for event model. """
 
     name_of_event_source: str
-    type_event_id: str
-    context: EventNewUser | EventNewEpisode | EventFromAdmin | NewLikesOfReview | FilmInBookmark | NewFilmsForPeriod
+    name_type_event: str
+    context: NewReviewsLikes | EventNewEpisode | EventFromAdmin | FilmInBookmark | NewFilmsForPeriod | EventNewUser

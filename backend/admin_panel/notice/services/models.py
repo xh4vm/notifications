@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import orjson
 from pydantic import BaseModel
 
@@ -18,25 +20,38 @@ class BaseMixin(BaseModel):
         cache_free = False
 
 
-class MoviesUser(BaseMixin):
+class NewReviewLikes(BaseMixin):
     user_id: str
-
-
-class MoviesFilm(BaseMixin):
     film_id: str
+    likes: list[str]
 
 
-class NewLikes(BaseMixin):
-    user: MoviesUser
-    film: MoviesFilm
-    likes: list[MoviesUser]
+class NewReviewsLikes(BaseMixin):
+    request_date: datetime
+    new_reviews_likes: list[NewReviewLikes]
 
 
 class ForgottenBookmarks(BaseMixin):
-    user: MoviesUser
-    films: list[MoviesFilm]
+    user_id: str
+    films: list[str]
 
 
 class NewMoviesForPeriod(BaseMixin):
     period_days: int
-    films: list[MoviesFilm]
+    films: list[str]
+
+
+class MovieEvent(BaseMixin):
+    name_of_event_source: str
+    name_type_event: str
+    context: NewReviewsLikes | ForgottenBookmarks | NewMoviesForPeriod
+
+
+class ResponseAPINotice(BaseMixin):
+    status: int
+    body: dict = None
+
+
+class GeneratorResponse(BaseMixin):
+    event: MovieEvent
+    api_notice_response: ResponseAPINotice
