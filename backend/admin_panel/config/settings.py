@@ -36,10 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'debug_toolbar',
-
     'notice.apps.NoticeConfig',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -107,6 +106,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = Path.joinpath(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path.joinpath(BASE_DIR, 'media')
+EMAILS_TEMPLATE_PATH = 'emails_template/'
 
 
 # Default primary key field type
@@ -138,12 +138,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
-# CELERY_BEAT_SCHEDULE = {
-#     'queue_every_five_mins': {
-#         'task': 'polls.tasks.query_every_five_mins',
-#         'schedule': crontab(minute=5),
-#     },
-# }
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 CELERY_DAYS_PERIOD_OF_NEWS = environ.get('CELERY_DAYS_PERIOD_OF_NEWS', 7)
 

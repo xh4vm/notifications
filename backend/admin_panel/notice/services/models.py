@@ -31,7 +31,7 @@ class NewReviewsLikes(BaseMixin):
     new_reviews_likes: list[NewReviewLikes]
 
 
-class ForgottenBookmarks(BaseMixin):
+class ForgottenUserBookmarks(BaseMixin):
     user_id: str
     films: list[str]
 
@@ -44,7 +44,7 @@ class NewMoviesForPeriod(BaseMixin):
 class MovieEvent(BaseMixin):
     name_of_event_source: str
     name_type_event: str
-    context: NewReviewsLikes | ForgottenBookmarks | NewMoviesForPeriod
+    context: NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod | None
 
 
 class ResponseAPINotice(BaseMixin):
@@ -54,4 +54,4 @@ class ResponseAPINotice(BaseMixin):
 
 class GeneratorResponse(BaseMixin):
     event: MovieEvent
-    api_notice_response: ResponseAPINotice
+    api_notice_response: ResponseAPINotice = None

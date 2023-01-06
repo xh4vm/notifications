@@ -17,7 +17,7 @@ class EventParams(MixinParams):
         self,
         name_of_event_source: str = Body(description="Name of the event source"),
         name_type_event: str = Body(description='ID of event\'s type', default='this_is_happened'),
-        context: dict = Body(description="Context of event")
+        context: dict = Body(description="Context of event", default=None)
     ):
         self.name_of_event_source = name_of_event_source
         self.name_type_event = name_type_event

@@ -17,8 +17,11 @@ async def check_result(result, errors: dict):
 async def get_context(params: dict, model) -> EventMovies:
     try:
         return model(**params)
-    except ValidationError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Event context is not valid")
+    except ValidationError as err:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Event context is not valid. Error: {0}'.format(err.args[0][0]),
+        )
 
 
 def fatal_error(err):

@@ -5,7 +5,7 @@ from uuid import uuid4
 import requests
 from django.conf import settings
 from loguru import logger
-from notice.services.models import (ForgottenBookmarks, GeneratorResponse,
+from notice.services.models import (ForgottenUserBookmarks, GeneratorResponse,
                                     MovieEvent, NewMoviesForPeriod,
                                     NewReviewLikes, NewReviewsLikes,
                                     ResponseAPINotice)
@@ -80,21 +80,31 @@ def get_new_review_likes() -> GeneratorResponse:
         ]
     )
 
-    return send_to_notice_api('Generator get_new_review_likes', settings.EVENT_NEW_REVIEW_LIKES, result_feedbacks)
+    return send_to_notice_api('Generator get_new_review_likes', settings.EVENT_NEW_REVIEW_LIKES[0], result_feedbacks)
 
 
 def get_forgotten_bookmarks():
     # 1. Сходить в API Auth получить токен
     # 2. Cходить c токеном в API Feedbacks получить забытые закладки
     # 3. Отправить событие в API Notice
-    result_feedbacks = ForgottenBookmarks(
-        user_id=uuid_str(),
-        films=[uuid_str(), uuid_str()]
-    )
+    result_feedbacks = [
+        ForgottenUserBookmarks(
+            user_id=uuid_str(),
+            films=[uuid_str(), uuid_str()]
+        ),
+        ForgottenUserBookmarks(
+            user_id=uuid_str(),
+            films=[uuid_str(), uuid_str()]
+        ),
+        ForgottenUserBookmarks(
+            user_id=uuid_str(),
+            films=[uuid_str(), uuid_str()]
+        ),
+    ]
 
     return send_to_notice_api(
         'Generator get_forgotten_bookmarks',
-        settings.EVENT_FORGOTTEN_BOOKMARKS,
+        settings.EVENT_FORGOTTEN_BOOKMARKS[0],
         result_feedbacks
     )
 
@@ -110,9 +120,14 @@ def get_new_movies_for_period(days):
 
     return send_to_notice_api(
         'Generator get_new_movies_for_period',
-        settings.EVENT_NEW_MOVIES_FOR_PERIOD,
+        settings.EVENT_NEW_MOVIES_FOR_PERIOD[0],
         result_content
     )
+
+
+def create_manual_mailing_event(event_name):
+
+    return send_to_notice_api('Generator manual mailing event', event_name, None)
 
 
 def task_logger(func):

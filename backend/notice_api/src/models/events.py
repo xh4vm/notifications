@@ -32,7 +32,7 @@ class FilmInBookmark(BaseMixin):
     films: list[str]
 
 
-class NewFilmsForPeriod(BaseMixin):
+class NewFilmsInPeriod(BaseMixin):
     period_days: int
     films: list[str]
 
@@ -42,4 +42,5 @@ class EventMovies(BaseMixin):
 
     name_of_event_source: str
     name_type_event: str
-    context: NewReviewsLikes | EventNewEpisode | EventFromAdmin | FilmInBookmark | NewFilmsForPeriod | EventNewUser
+    context: (NewReviewsLikes | EventNewEpisode | EventFromAdmin |
+              list[FilmInBookmark] | NewFilmsInPeriod | EventNewUser | None)

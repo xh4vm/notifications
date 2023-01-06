@@ -148,3 +148,4 @@ commands.md
 *__pycache__
 .env
 ./backend/*/.dockerignore
+/backend/admin_panel/media/emails_template/
