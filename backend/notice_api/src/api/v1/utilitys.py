@@ -6,6 +6,7 @@ from aio_pika.exceptions import CONNECTION_EXCEPTIONS
 from fastapi import HTTPException
 from pydantic import ValidationError
 from src.core.config import SETTINGS
+from src.models.events import EventMovies
 
 
 async def check_result(result, errors: dict):
@@ -13,11 +14,14 @@ async def check_result(result, errors: dict):
         raise HTTPException(status_code=errors['status'], detail=errors['message'])
 
 
-async def get_context(params: dict, model):
+async def get_context(params: dict, model) -> EventMovies:
     try:
         return model(**params)
-    except ValidationError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Event context is not valid")
+    except ValidationError as err:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Event context is not valid. Error: {0}'.format(err.args[0][0]),
+        )
 
 
 def fatal_error(err):

@@ -1,5 +1,4 @@
 """ Router for Likes service. """
-
 from fastapi import APIRouter, Depends, Request
 from src.api.v1.params import EventParams
 from src.api.v1.utilitys import check_result, get_context

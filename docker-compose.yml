@@ -12,6 +12,19 @@ x-base-rabbitmq: &base_rabbitmq
       - rabbitmq_log:/var/log/rabbitmq
     entrypoint: /usr/local/bin/cluster-entrypoint.sh
 
+x-redis: &base_redis
+  <<: *base_service
+  image: redis:7.0-alpine
+  container_name: redis
+  restart: unless-stopped
+  expose:
+    - ${REDIS_PORT}
+  healthcheck:
+    test: ["CMD", "redis-cli","ping"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+
 services:
   rabbitmq1:
     <<: *base_service
@@ -132,6 +145,14 @@ services:
       - notice
       - admin_panel
 
+  redis:
+    <<: *base_redis
+    profiles:
+      - admin_panel
+      - redis
+    volumes:
+      - redis-data:/data
+
   nginx:
     <<: *base_service
     image: nginx:1.23.1-alpine
@@ -159,3 +180,4 @@ volumes:
     rabbitmq_data:
     rabbitmq_log:
     notice_db_volume:
+    redis-data:

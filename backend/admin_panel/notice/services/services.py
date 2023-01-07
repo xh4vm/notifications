@@ -1,55 +1,213 @@
-from uuid import uuid4
+from datetime import datetime
+from functools import wraps
+from http import HTTPStatus
 
+from db.redis_storage import redis_storage
+from django.conf import settings
 from loguru import logger
-from notice.services.models import (ForgottenBookmarks, MoviesFilm, MoviesUser,
-                                    NewLikes, NewMoviesForPeriod)
+from notice.fake_api_request import (
+    _make_request_auth, _make_request_content_new_movies_for_period,
+    _make_request_feedbacks_forgotten_bookmarks, _make_request_feedbacks_likes,
+    mock_api_request)
+from notice.services.models import ErrorResponse, GeneratorResponse, MovieEvent
+from notice.utils import get_token_exp, make_request
+from redis import Redis
+
+redis_storage.storage = Redis(**settings.KEY_VALUE_DB_SETTINGS)
 
 
-def uuid_str():
-    return str(uuid4())
+def send_to_notice_api(name_source, name_event, data):
+    result = MovieEvent(
+        name_of_event_source=name_source,
+        name_type_event=name_event,
+        context=data,
+    )
+
+    result_request = make_request(
+        url=settings.NOTICE_API_ENTRYPOINT,
+        method='post',
+        params={'data': result.json()}
+    )
+
+    return GeneratorResponse(
+        event=result,
+        api_notice_response=result_request
+    )
 
 
-def get_new_review_likes():
+def set_tokens_to_storage(body: dict) -> bool | ErrorResponse:
+    token_exp = get_token_exp(body['access_token'])
+
+    if isinstance(token_exp, ErrorResponse):
+        return token_exp
+
+    expire = datetime.fromtimestamp(token_exp) - datetime.now()
+    redis_storage.set_to(settings.ACCESS_TOKEN_KEY, body['access_token'], expire=expire)
+
+    token_exp = get_token_exp(body['refresh_token'])
+
+    if isinstance(token_exp, ErrorResponse):
+        return token_exp
+
+    expire = datetime.fromtimestamp(token_exp) - datetime.now()
+    redis_storage.set_to(settings.REFRESH_TOKEN_KEY, body['refresh_token'], expire=expire)
+
+
+@mock_api_request(_make_request_auth)
+def get_access_token(make_request_func):
+
+    if access_token := redis_storage.get_from(settings.ACCESS_TOKEN_KEY):
+        return access_token
+
+    if refresh_token := redis_storage.get_from(settings.REFRESH_TOKEN_KEY):
+
+        result_request = make_request_func(
+            url=settings.AUTH_API_AUTH_ENTRYPOINT,
+            method='put',
+            params={'data': {'refresh_token': refresh_token}}
+        )
+
+    else:
+
+        result_request = make_request_func(
+            url=settings.AUTH_API_LOGIN_ENTRYPOINT,
+            method='put',
+            params={'data': settings.AUTH_API_LOGIN_PARAMS}
+        )
+
+    return set_tokens_to_storage(result_request.body)
+
+
+@mock_api_request(_make_request_feedbacks_likes)
+def get_new_likes(make_request_func, access_token):
+    result_request = make_request(
+        url=settings.FEEDBACKS_API_NEW_LIKES_ENTRYPOINT,
+        method='get',
+        params={
+            'headers': {'Authorization': access_token},
+        }
+    )
+    return result_request
+
+
+@mock_api_request(_make_request_feedbacks_forgotten_bookmarks)
+def get_forgotten_bookmarks(make_request_func, access_token):
+    result_request = make_request(
+        url=settings.FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT,
+        method='get',
+        params={
+            'headers': {'Authorization': access_token},
+        }
+    )
+    return result_request
+
+
+@mock_api_request(_make_request_content_new_movies_for_period)
+def get_new_movies_for_period(make_request_func, access_token, days):
+    result_request = make_request(
+        url=settings.CONTENT_API_NEW_MOVIES,
+        method='get',
+        params={
+            'headers': {'Authorization': access_token},
+            'data': {'days': days}
+        }
+    )
+    return result_request
+
+
+def send_event_new_review_likes() -> GeneratorResponse | ErrorResponse:
     # 1. Сходить в API Auth получить токен
     # 2. Cходить c токеном в API Feedbacks получить новые лайки
     # 3. Отправить событие в API Notice
-    result = NewLikes(
-        user=MoviesUser(user_id=uuid_str()),
-        film=MoviesFilm(film_id=uuid_str()),
-        likes=[
-            MoviesUser(user_id=uuid_str()),
-            MoviesUser(user_id=uuid_str()),
-            MoviesUser(user_id=uuid_str()),
-            MoviesUser(user_id=uuid_str()),
-        ]
+
+    result_request = get_access_token(make_request_func=make_request)
+
+    if result_request.status != HTTPStatus.OK or not result_request.body.get('auth_token', None):
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    result_request = get_new_likes(make_request_func=make_request, access_token=result_request.body.get('auth_token'))
+
+    if result_request.status != HTTPStatus.OK:
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    return send_to_notice_api(
+        'Generator get_new_review_likes',
+        settings.EVENT_NEW_REVIEW_LIKES[0],
+        result_request.body
     )
-    logger.info(result)
-    pass
 
 
-def get_forgotten_bookmarks():
+def send_event_forgotten_bookmarks():
     # 1. Сходить в API Auth получить токен
     # 2. Cходить c токеном в API Feedbacks получить забытые закладки
     # 3. Отправить событие в API Notice
-    result = ForgottenBookmarks(
-        user=MoviesUser(user_id=uuid_str()),
-        films=[
-            MoviesFilm(user_id=uuid_str()),
-            MoviesFilm(user_id=uuid_str()),
-        ]
+
+    result_request = get_access_token(make_request_func=make_request)
+
+    if result_request.status != HTTPStatus.OK or not result_request.body.get('auth_token', None):
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    result_request = get_forgotten_bookmarks(
+        make_request_func=make_request,
+        access_token=result_request.body.get('auth_token')
     )
-    logger.info(result)
+
+    if result_request.status != HTTPStatus.OK:
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    return send_to_notice_api(
+        'Generator get_forgotten_bookmarks',
+        settings.EVENT_FORGOTTEN_BOOKMARKS[0],
+        result_request.body
+    )
 
 
-def get_new_movies_for_period(days):
+def send_event_new_movies_for_period(days):
     # 1. Сходить в API Auth получить токен
     # 2. Cходить c токеном в API Content получить новые фильмы за посление days дней
     # 3. Отправить событие в API Notice
-    result = NewMoviesForPeriod(
-        period_days=days,
-        films=[
-            MoviesFilm(user_id=uuid_str()),
-            MoviesFilm(user_id=uuid_str()),
-        ]
+
+    result_request = get_access_token(make_request_func=make_request)
+
+    if result_request.status != HTTPStatus.OK or not result_request.body.get('auth_token', None):
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    result_request = get_new_movies_for_period(
+        make_request_func=make_request,
+        access_token=result_request.body.get('auth_token'),
+        days=days,
     )
-    logger.info(result)
+
+    if result_request.status != HTTPStatus.OK:
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    return send_to_notice_api(
+        'Generator get_new_movies_for_period',
+        settings.EVENT_NEW_MOVIES_FOR_PERIOD[0],
+        result_request.body,
+    )
+
+
+def send_create_manual_mailing_event(event_name):
+
+    return send_to_notice_api('Generator manual mailing event', event_name, None)
+
+
+def task_logger(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+
+        result = func(*args, **kwargs)
+
+        if isinstance(result, ErrorResponse):
+            logger.error('Event Error. Status {0}. Body {1}'.format(result.status, result.body))
+        else:
+            logger.info('Event: {0}'.format(result.event))
+            logger.info('Send to API Notice with result Status <{0}>. Body: {1}'.format(
+                result.api_notice_response.status,
+                result.api_notice_response.body
+            )
+            )
+        return result
+    return wrapper

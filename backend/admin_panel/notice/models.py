@@ -1,12 +1,13 @@
 import uuid
+from datetime import date
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from pydantic import ValidationError
 
 from .utils import validate_doctype, validate_template
 
@@ -46,12 +47,17 @@ def validate_file_contents(value):
     value.seek(0)
 
 
+def validate_date_to_send(value: date):
+    if value < date.today():
+        raise ValidationError('The sending date [{0}] cannot be a past date'.format(value.strftime('%d.%m.%Y')))
+
+
 class TypeEvent(UUIDMixin, TimeStampedMixin):
     """Class for the type event model."""
 
     name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
     template_file = models.FileField(
-        upload_to='emails_template/',
+        upload_to=settings.EMAILS_TEMPLATE_PATH,
         validators=[validate_file_contents]
     )
     template_params = ArrayField(
@@ -64,8 +70,8 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
         """Class Meta for Genre."""
 
         db_table = 'content\".\"type_event'
-        verbose_name = _('Type_event')
-        verbose_name_plural = _('Type_event')
+        verbose_name = _('Type event')
+        verbose_name_plural = _('Type events')
         indexes = [
             models.Index(fields=['name'])
         ]
@@ -76,7 +82,7 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
         Returns:
             result
         """
-        return self.name
+        return '{0} ({1})'.format(self.name, self.template_file.name)
 
 
 # post_delete.connect(
@@ -84,7 +90,7 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
 # )
 
 @receiver(post_delete, sender=TypeEvent)
-def post_save_image(sender, instance, *args, **kwargs):
+def post_save_file(sender, instance, *args, **kwargs):
     """ Clean Old file """
     try:
         instance.template_file.delete(save=False)
@@ -93,17 +99,39 @@ def post_save_image(sender, instance, *args, **kwargs):
 
 
 @receiver(pre_save, sender=TypeEvent)
-def pre_save_image(sender, instance, *args, **kwargs):
+def pre_save_file(sender, instance, *args, **kwargs):
     """ instance old file will delete from os """
     try:
-        old_img = instance.__class__.objects.get(id=instance.id).template_file.path
+        old_file = instance.__class__.objects.get(id=instance.id).template_file.path
         try:
-            new_img = instance.template_file.path
+            new_file = instance.template_file.path
         except Exception:
-            new_img = None
-        if new_img != old_img:
+            new_file = None
+        if new_file != old_file:
             import os
-            if os.path.exists(old_img):
-                os.remove(old_img)
+            if os.path.exists(old_file):
+                os.remove(old_file)
     except Exception:
         pass
+
+
+class CreateManualMailing(UUIDMixin, TimeStampedMixin):
+    """Class for the admin model."""
+
+    name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
+    type_event = models.ForeignKey(
+        'TypeEvent',
+        on_delete=models.CASCADE,
+        verbose_name=_('Type event (template)'),
+    )
+    date_to_send = models.DateField(validators=[validate_date_to_send])
+
+    class Meta(object):
+        """Class Meta for Genre."""
+
+        db_table = 'content\".\"create_manual_mailing'
+        verbose_name = _('Create manual mailing')
+        verbose_name_plural = _('Create manual mailings')
+        indexes = [
+            models.Index(fields=['name'])
+        ]
