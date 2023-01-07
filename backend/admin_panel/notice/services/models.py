@@ -47,11 +47,21 @@ class MovieEvent(BaseMixin):
     context: NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod | None
 
 
-class ResponseAPINotice(BaseMixin):
+# class ResponseAPINotice(BaseMixin):
+#     status: int
+#     body: dict = None
+
+
+class ResultResponse(BaseMixin):
     status: int
     body: dict = None
 
 
 class GeneratorResponse(BaseMixin):
     event: MovieEvent
-    api_notice_response: ResponseAPINotice = None
+    api_notice_response: ResultResponse = None
+
+
+class ErrorResponse(BaseMixin):
+    status: int
+    body: dict

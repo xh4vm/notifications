@@ -1,5 +1,6 @@
 """Django settings for config project."""
-
+import json
+import re
 from os import environ
 from pathlib import Path
 
@@ -114,7 +115,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CELERY
-# amqp://user:pass@host:5672/vhost
 CELERY_BROKER_URL = '{0}{1}:{2}@{3}:{4}{5}'.format(
     environ.get('CELERY_BROKER_NAME', 'pyamqp://'),
     environ.get('RABBITMQ_DEFAULT_USER', None),
@@ -123,16 +123,6 @@ CELERY_BROKER_URL = '{0}{1}:{2}@{3}:{4}{5}'.format(
     environ.get('RABBITMQ_PORT', 5672),
     environ.get('RABBITMQ_DEFAULT_VHOST', '/'),
 )
-
-# CELERY_RESULT_BACKEND = '{0}{1}:{2}@{3}:{4}/{5}'.format(
-#     environ.get('CELERY_RESULT_BACKEND', 'db+postgresql://'),
-#     environ.get('NOTICE_DB_USER', None),
-#     environ.get('NOTICE_DB_PASSWORD', None),
-#     environ.get('NOTICE_DB_HOST', 'localhost'),
-#     environ.get('NOTICE_DB_PORT', 5432),
-#     environ.get('NOTICE_DB_NAME', None),
-# )
-
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -150,3 +140,18 @@ NOTICE_API_ENTRYPOINT = '{0}{1}:{2}{3}/{4}/{5}'.format(
     environ.get('PROJECT_NOTICE_API_VERSION', 'v1'),
     environ.get('NOTICE_API_ENTRYPOINT', 'events'),
 )
+
+
+AUTH_API_AUTH_ENTRYPOINT = '{0}/auth'.format(environ.get('AUTH_API_URL'))
+AUTH_API_LOGIN_ENTRYPOINT = '{0}/login'.format(environ.get('AUTH_API_URL'))
+AUTH_API_LOGIN_PARAMS = json.dumps({
+        'login': environ.get('AUTH_API_USER'),
+        'password': environ.get('AUTH_API_PASS'),
+})
+
+FEEDBACKS_API_NEW_LIKES_ENTRYPOINT = '{0}/new_likes'.format(environ.get('FEEDBACKS_API_HOST'))
+FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT = '{0}/forgotten_bookmarks'.format(environ.get('FEEDBACKS_API_HOST'))
+CONTENT_API_NEW_MOVIES = '{0}/new_movies'.format(environ.get('CONTENT_API_HOST'))
+
+AUTH_JWT_SECRET_KEY = environ.get('AUTH_JWT_SECRET_KEY')
+AUTH_JWT_DECODE_ALGORITHMS = re.findall(r'\"(.+?)\"', environ.get('AUTH_JWT_DECODE_ALGORITHMS'))

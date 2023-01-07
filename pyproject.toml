@@ -30,6 +30,9 @@ psycopg2-binary="2.9.3"
 celery = "5.2.7"
 sqlalchemy = "1.4.45"
 django-celery-beat = "2.4.0"
+redis = "4.4.0"
+backoff = "2.2.1"
+pyjwt = "2.4.0"
 
 
 [tool.poetry.group.linters.dependencies]

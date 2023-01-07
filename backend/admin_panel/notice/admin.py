@@ -56,7 +56,7 @@ class CreateManualMailing(admin.ModelAdmin):
         else:
             start_time = datetime.utcnow()
 
-        expires = start_time + timedelta(hours=24)
+        expires = start_time + timedelta(hours=25)
 
         schedule, created = IntervalSchedule.objects.get_or_create(
             every=4,
@@ -64,7 +64,12 @@ class CreateManualMailing(admin.ModelAdmin):
         )
         PeriodicTask.objects.get_or_create(
             interval=schedule,
-            name='Task for mailing <{0}>'.format(obj.name),
+            name='Task for mailing <{0}>, {1}, from {2} to {3}'.format(
+                obj.name,
+                obj.type_event.name,
+                start_time.strftime('%d.%m.%Y %H:%M:%S'),
+                expires.strftime('%d.%m.%Y %H:%M:%S'),
+            ),
             task='notice.tasks.generator_event_manual_mailing',
             args=json.dumps([obj.type_event.name, ]),
             start_time=start_time,
