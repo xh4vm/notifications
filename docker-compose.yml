@@ -10,6 +10,11 @@ x-base-rabbitmq: &base_rabbitmq
       - ./backend/rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
       - rabbitmq_data:/var/lib/rabbitmq/
       - rabbitmq_log:/var/log/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
     entrypoint: /usr/local/bin/cluster-entrypoint.sh
 
 services:
@@ -18,16 +23,12 @@ services:
     container_name: rabbitmq1
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq1
+    env_file: .env
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_DEFAULT_VHOST}
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -37,17 +38,13 @@ services:
     container_name: rabbitmq2
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq2
+    env_file: .env
     depends_on:
       rabbitmq1:
         condition: service_healthy
     environment:
       - JOIN_CLUSTER_HOST=rabbitmq1
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -57,17 +54,13 @@ services:
     container_name: rabbitmq3
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq3
+    env_file: .env
     depends_on:
       rabbitmq2:
         condition: service_healthy
     environment:
       - JOIN_CLUSTER_HOST=rabbitmq1
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -104,8 +97,8 @@ services:
       - ${PROJECT_NOTICE_API_PORT}
     volumes:
       - ./backend/notice_api:/opt/content
-      - ./backend/notice_api/static/info.log:/var/log/feedbacks/info.log
-      - ./backend/notice_api/static/error.log:/var/log/feedbacks/error.log
+      - ./backend/notice_api/static/info.log:/var/log/notice_api/info.log
+      - ./backend/notice_api/static/error.log:/var/log/notice_api/error.log
     healthcheck:
       test: curl http://notice-api:${PROJECT_NOTICE_API_PORT} >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 3s
@@ -115,9 +108,10 @@ services:
       - haproxy
 
   notice_db:
+    <<: *base_service
     container_name: notice_db
     hostname: notice_db
-    image: postgres:13
+    image: postgres:13-alpine
     environment:
       POSTGRES_PASSWORD: $NOTICE_DB_PASSWORD
       POSTGRES_USER: $NOTICE_DB_USER
@@ -125,12 +119,16 @@ services:
     restart: always
     ports:
       - "5432:5432"
-    <<: *base_service
     volumes:
       - notice_db_volume:/var/lib/postgresql/data
     profiles:
       - notice
       - admin_panel
+    healthcheck:
+      test: pg_isready -U ${NOTICE_DB_USER} -D ${NOTICE_DB_NAME} > /dev/null; if [[ $$? == 0 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   nginx:
     <<: *base_service

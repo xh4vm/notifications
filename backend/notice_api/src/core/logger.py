@@ -1,4 +1,4 @@
-LOG_DEFAULT_HANDLERS = ['info_rotating_file_handler', ]
+LOG_DEFAULT_HANDLERS = ['console', 'info_rotating_file_handler', ]
 
 LOGGING = {
     'version': 1,
@@ -22,7 +22,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'info',
-            'filename': '/var/log/feedbacks/info.log',
+            'filename': '/var/log/notice_api/info.log',
             'mode': 'a',
             'maxBytes': 1048576,
             'backupCount': 10
@@ -31,12 +31,12 @@ LOGGING = {
             'level': 'ERROR',
             'formatter': 'error',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/feedbacks/error.log',
+            'filename': '/var/log/notice_api/error.log',
         },
     },
     'loggers': {
         '': {
-            'handlers': ['info_rotating_file_handler', 'error_file_handler', ],
+            'handlers': ['console', 'info_rotating_file_handler', 'error_file_handler', ],
             'level': 'INFO',
         },
         'uvicorn.error': {
