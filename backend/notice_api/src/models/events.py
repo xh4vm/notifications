@@ -30,7 +30,7 @@ class NewFilmsForPeriod(BaseMixin):
 
 
 class EventMovies(BaseMixin):
-    """ Class for event model. """
+    """Class for event model."""
 
     name_of_event_source: str
     type_event_id: str
