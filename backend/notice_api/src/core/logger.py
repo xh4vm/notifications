@@ -22,7 +22,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'info',
-            'filename': '/var/log/feedbacks/info.log',
+            'filename': '/var/log/notice_api/info.log',
             'mode': 'a',
             'maxBytes': 1048576,
             'backupCount': 10
@@ -31,7 +31,7 @@ LOGGING = {
             'level': 'ERROR',
             'formatter': 'error',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/feedbacks/error.log',
+            'filename': '/var/log/notice_api/error.log',
         },
     },
     'loggers': {

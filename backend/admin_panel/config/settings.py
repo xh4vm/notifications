@@ -23,6 +23,9 @@ SECRET_KEY = environ.get('SECRET_KEY')
 
 DEBUG = environ.get('DEBUG', False) == 'True'
 
+
+ALLOWED_ORIGINS = ['http://*', 'https://*']
+CSRF_TRUSTED_ORIGINS = ALLOWED_ORIGINS.copy()
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 if DEBUG:
@@ -104,9 +107,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATIC_ROOT = Path.joinpath(BASE_DIR, 'static')
+STATIC_ROOT = Path.joinpath(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = Path.joinpath(BASE_DIR, 'media')
+MEDIA_ROOT = Path.joinpath(BASE_DIR, 'mediafiles')
 EMAILS_TEMPLATE_PATH = 'emails_template/'
 
 
@@ -152,6 +155,7 @@ AUTH_API_LOGIN_PARAMS = json.dumps({
 FEEDBACKS_API_NEW_LIKES_ENTRYPOINT = '{0}/new_likes'.format(environ.get('FEEDBACKS_API_HOST'))
 FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT = '{0}/forgotten_bookmarks'.format(environ.get('FEEDBACKS_API_HOST'))
 CONTENT_API_NEW_MOVIES = '{0}/new_movies'.format(environ.get('CONTENT_API_HOST'))
+CONTENT_API_FILM_NAME = '{0}/film_name'.format(environ.get('CONTENT_API_HOST'))
 
 AUTH_JWT_SECRET_KEY = environ.get('AUTH_JWT_SECRET_KEY')
 AUTH_JWT_DECODE_ALGORITHMS = re.findall(r'\"(.+?)\"', environ.get('AUTH_JWT_DECODE_ALGORITHMS'))

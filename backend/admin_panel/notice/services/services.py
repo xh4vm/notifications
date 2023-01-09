@@ -6,11 +6,12 @@ from db.redis_storage import redis_storage
 from django.conf import settings
 from loguru import logger
 from notice.fake_api_request import (
-    _make_request_auth, _make_request_content_new_movies_for_period,
+    _make_request_auth, _make_request_content_get_film_name,
+    _make_request_content_new_movies_for_period,
     _make_request_feedbacks_forgotten_bookmarks, _make_request_feedbacks_likes,
     mock_api_request)
 from notice.services.models import ErrorResponse, GeneratorResponse, MovieEvent
-from notice.utils import get_token_exp, make_request
+from notice.utils import create_time_zones_list, get_token_exp, make_request
 from redis import Redis
 
 redis_storage.storage = Redis(**settings.KEY_VALUE_DB_SETTINGS)
@@ -18,15 +19,26 @@ redis_storage.storage = Redis(**settings.KEY_VALUE_DB_SETTINGS)
 
 def send_to_notice_api(name_source, name_event, data):
     result = MovieEvent(
+        time_zone=create_time_zones_list(min_time=settings.RECIPIENT_MIN_TIME, max_time=settings.RECIPIENT_MAX_TIME),
         name_of_event_source=name_source,
         name_type_event=name_event,
         context=data,
+        created=datetime.utcnow(),
     )
 
     result_request = make_request(
         url=settings.NOTICE_API_ENTRYPOINT,
         method='post',
-        params={'data': result.json()}
+        params={'data': result.json(exclude={'film_id'})}
+    )
+
+    if result_request.status != HTTPStatus.OK:
+        logger.error('Event Error. Status {0}. Body {1}'.format(result_request.status, result_request.body))
+        return ErrorResponse(status=result_request.status, body=result_request.body)
+
+    logger.info('Event: {0}'.format(result))
+    logger.info(
+        'Send to API Notice with result Status <{0}>. Body: {1}'.format(result_request.status, result_request.body)
     )
 
     return GeneratorResponse(
@@ -80,31 +92,41 @@ def get_access_token(make_request_func):
 
 @mock_api_request(_make_request_feedbacks_likes)
 def get_new_likes(make_request_func, access_token):
-    result_request = make_request(
+    return make_request(
         url=settings.FEEDBACKS_API_NEW_LIKES_ENTRYPOINT,
         method='get',
         params={
             'headers': {'Authorization': access_token},
         }
     )
-    return result_request
+
+
+@mock_api_request(_make_request_content_get_film_name)
+def get_film_name(make_request_func, access_token, film_id):
+    return make_request(
+        url=settings.CONTENT_API_FILM_NAME,
+        method='get',
+        params={
+            'headers': {'Authorization': access_token},
+            'data': {'film_id': film_id}
+        }
+    )
 
 
 @mock_api_request(_make_request_feedbacks_forgotten_bookmarks)
 def get_forgotten_bookmarks(make_request_func, access_token):
-    result_request = make_request(
+    return make_request(
         url=settings.FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT,
         method='get',
         params={
             'headers': {'Authorization': access_token},
         }
     )
-    return result_request
 
 
 @mock_api_request(_make_request_content_new_movies_for_period)
 def get_new_movies_for_period(make_request_func, access_token, days):
-    result_request = make_request(
+    return make_request(
         url=settings.CONTENT_API_NEW_MOVIES,
         method='get',
         params={
@@ -112,29 +134,50 @@ def get_new_movies_for_period(make_request_func, access_token, days):
             'data': {'days': days}
         }
     )
-    return result_request
 
 
-def send_event_new_review_likes() -> GeneratorResponse | ErrorResponse:
+def send_event_new_review_likes() -> GeneratorResponse | ErrorResponse | list[GeneratorResponse] | list[ErrorResponse]:
     # 1. Сходить в API Auth получить токен
     # 2. Cходить c токеном в API Feedbacks получить новые лайки
     # 3. Отправить событие в API Notice
 
     result_request = get_access_token(make_request_func=make_request)
 
-    if result_request.status != HTTPStatus.OK or not result_request.body.get('auth_token', None):
+    auth_token = result_request.body.get('auth_token', None)
+
+    if result_request.status != HTTPStatus.OK or not auth_token:
         return ErrorResponse(status=result_request.status, body=result_request.body)
 
-    result_request = get_new_likes(make_request_func=make_request, access_token=result_request.body.get('auth_token'))
+    result_request = get_new_likes(make_request_func=make_request, access_token=auth_token)
 
     if result_request.status != HTTPStatus.OK:
         return ErrorResponse(status=result_request.status, body=result_request.body)
 
-    return send_to_notice_api(
-        'Generator get_new_review_likes',
-        settings.EVENT_NEW_REVIEW_LIKES[0],
-        result_request.body
-    )
+    send_to_notice_api_results = []
+
+    for new_review_likes in result_request.body.new_reviews_likes:
+
+        result_request = get_film_name(
+            make_request_func=make_request,
+            access_token=auth_token,
+            film_id=new_review_likes.film_id,
+        )
+
+        if result_request.status != HTTPStatus.OK:
+            logger.error('Event Error. Status {0}. Body {1}'.format(result_request.status, result_request.body))
+            continue
+
+        new_review_likes.film_name = result_request.film_name
+
+        send_to_notice_api_results.append(
+            send_to_notice_api(
+                name_source='Generator get_new_review_likes',
+                name_event=settings.EVENT_NEW_REVIEW_LIKES[0],
+                data=new_review_likes
+            )
+        )
+
+    return send_to_notice_api_results
 
 
 def send_event_forgotten_bookmarks():

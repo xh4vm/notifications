@@ -1,8 +1,10 @@
 import re
+from datetime import datetime, time
 from functools import wraps
 
 import backoff
 import jwt
+import pytz
 import requests
 from django.conf import settings
 from loguru import logger
@@ -20,7 +22,7 @@ def make_request(url, method, params):
         params: parameters for query
 
     Returns:
-        list: result
+        ResultResponse: result
     """
 
     session = requests.session()
@@ -86,3 +88,23 @@ def get_token_exp(token) -> float | ErrorResponse:
         return ErrorResponse(status=False, body=TokenError.DECODE_ERROR)
 
     return payload.get('exp')
+
+
+def create_time_zones_list(min_time: int = 0, max_time: int = 23) -> list[str]:
+    result = []
+    all_time_zones = pytz.all_timezones
+    min_time = time(min_time, 0, 0)
+    max_time = time(max_time, 59, 59)
+
+    for time_zone_name in all_time_zones:
+        time_zone_time = datetime.now(pytz.timezone(time_zone_name)).time()
+
+        if min_time < max_time and (min_time <= time_zone_time <= max_time):
+            result.append(time_zone_name)
+
+        if min_time > max_time and (
+                min_time <= time_zone_time <= time(23, 59, 59) or time(0, 0, 0) <= time_zone_time <= max_time
+        ):
+            result.append(time_zone_name)
+
+    return result

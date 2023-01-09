@@ -3,9 +3,9 @@ from functools import wraps
 from http import HTTPStatus
 from uuid import uuid4
 
-from notice.services.models import (ForgottenUserBookmarks, NewMoviesForPeriod,
-                                    NewReviewLikes, NewReviewsLikes,
-                                    ResultResponse)
+from notice.services.models import (FilmName, ForgottenUserBookmarks,
+                                    NewMoviesForPeriod, NewReviewLikes,
+                                    NewReviewsLikes, ResultResponse)
 
 
 def uuid_str():
@@ -85,5 +85,15 @@ def _make_request_content_new_movies_for_period(url, method, params):
         body=NewMoviesForPeriod(
             period_days=params['data']['days'],
             films=[uuid_str(), uuid_str(), uuid_str(), uuid_str()]
+        ),
+    )
+
+
+def _make_request_content_get_film_name(url, method, params):
+    return ResultResponse(
+        status=HTTPStatus.OK,
+        body=FilmName(
+            film_id=params['data']['film_id'],
+            film_name='Fake Film Name {0}'.format(params['data']['film_id'])
         ),
     )
