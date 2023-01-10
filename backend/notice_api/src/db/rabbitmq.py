@@ -51,7 +51,8 @@ class RabbitMQProducer(AsyncProducer):
 
         self.channel = await self.connection.channel()
 
-        self.queue = await self.channel.declare_queue(name=queue_name, durable=True)
+        self.queue = await self.channel.declare_queue(name='builder', durable=True)
+        # self.queue = await self.channel.declare_queue(name=queue_name, durable=True)
 
     @test_connection
     async def send_event(self, header: str, payload: str, **kwargs):

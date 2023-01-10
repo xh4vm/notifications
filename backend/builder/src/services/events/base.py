@@ -1,34 +1,47 @@
+import asyncio
 import backoff
-from abc import ABC
+from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from loguru import logger
-from aio_pika import connect_robust
+from aio_pika import connect_robust, Channel
+from aio_pika.pool import Pool
+from aio_pika.abc import AbstractRobustConnection
 
 from src.config.config import BACKOFF_CONFIG, RabbitMQSettings, RABBITMQ_CONFIG
 
 
 class BaseEventManager(ABC):
-    
-    def __init__(self, config: BaseModel, **kwargs):
-        '''Конструктор'''
+    @abstractmethod
+    async def get_connection(self):
+        '''Инициализация пулла соединений'''
+
+    @abstractmethod
+    async def get_channel(self):
+        '''Инициализация пулла каналов'''
 
 
 class RabbitMQEventManager(BaseEventManager):
 
-    @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
-    def __init__(
-            self,
-            config: RabbitMQSettings = RABBITMQ_CONFIG,
-            **kwargs
-    ):
-        self.service_name = config.service_name
-        self.connection = connect_robust(
-            host=config.HOST,
-            port=config.PORT,
-            login=config.DEFAULT_USER,
-            password=config.DEFAULT_PASS
+    def __init__(self, settings: RabbitMQSettings = RABBITMQ_CONFIG, **kwargs):
+        self._loop = asyncio.get_event_loop()
+        self._settings = settings
+
+    async def get_connection(self) -> AbstractRobustConnection:
+        return await connect_robust(
+            host=self._settings.HOST,
+            port=self._settings.PORT,
+            login=self._settings.DEFAULT_USER,
+            password=self._settings.DEFAULT_PASS
         )
 
-        self.channel = self.connection.channel()
+    async def get_channel(self) -> Channel:
+        async with self.connection_pool.acquire() as connection:
+            return await connection.channel()
 
-        self.queue = self.channel.declare_queue(name=config.queue_name, durable=True)
+    @property
+    def connection_pool(self):
+        return Pool(self.get_connection, max_size=10, loop=self._loop)
+
+    @property
+    def channel_pool(self):
+        return Pool(self.get_channel, max_size=2, loop=self._loop)

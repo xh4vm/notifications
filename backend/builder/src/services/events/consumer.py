@@ -1,35 +1,46 @@
+import asyncio
+import orjson
 import backoff
 from abc import ABC, abstractmethod
-from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
-from typing import Callable, Optional
+from typing import Coroutine, Optional, Any
 
 from src.config.config import BACKOFF_CONFIG
-from .base import RabbitMQEvent
+from .base import RabbitMQEventManager
 
 
 class BaseConsumer(ABC):
-
+    
     @abstractmethod
-    async def read_event(self, **kwargs):
+    async def subscribe(self, **kwargs):
         '''Метод отправляет событие в rabbit'''
 
 
-class RabbitMQConsumer(BaseConsumer, RabbitMQEvent):
+class RabbitMQConsumer(BaseConsumer, RabbitMQEventManager):
 
-    async def _on_message(
-        self,
-        message: AbstractIncomingMessage,
-        callback: Optional[Callable[[AbstractIncomingMessage], None]] = None
-    ) -> None:
-        async with message.process():
-            logger(f" [x] Received message {message!r}")
-            logger(f"     Message body is: {message.body!r}")
+    def __init__(self, subscriber_queue: str, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.subscriber_queue = subscriber_queue
 
-            if callback is not None:
-                callback(message)
+    # @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
+    async def subscribe(self, callback: Optional[Coroutine[Any, dict[str, Any], None]] = None, **kwargs) -> None:
+        async with self.channel_pool.acquire() as channel:
+            await channel.set_qos(prefetch_count=10)
 
-    @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
-    async def read_event(self, **kwargs):
-        await self.queue.consume(self._on_message)
-        return True
+            queue = await channel.declare_queue(
+                self.subscriber_queue,
+                durable=True,
+                auto_delete=False
+            )
+
+            async with queue.iterator() as queue_iter:
+                async for message in queue_iter:
+                    logger.info(
+                        f'Message from <{message.routing_key}>: id: <{message.message_id}>, body: <{message.body}>'
+                    )
+
+                    if callback is not None:
+                        await callback(orjson.loads(message.body))
+
+                    await message.ack()
+        await asyncio.Future()
