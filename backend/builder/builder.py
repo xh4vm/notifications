@@ -1,9 +1,12 @@
 from loguru import logger
-
 from celery import Celery
-from config import CELERY_CONFIG
 
-celery = Celery(CELERY_CONFIG.name, backend=CELERY_CONFIG.backend, broker=CELERY_CONFIG.broker)
+from src.config.config import CELERY_CONFIG
+from src.services.events.consumer import RabbitMQConsumer
+from src.services.events.producer import RabbitMQProducer
+from src.services.builder import JinjaBuilder
+
+celery = Celery(CELERY_CONFIG.NAME, backend=CELERY_CONFIG.BACKEND, broker=CELERY_CONFIG.BROKER)
 
 
 @celery.task

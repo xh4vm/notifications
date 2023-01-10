@@ -13,26 +13,31 @@ class RabbitMQSettings(BaseSettings):
     DEFAULT_USER: str
     DEFAULT_PASS: str
     DEFAULT_VHOST: str
-    QUERY_NAME: str
+    QUEUE_NAME: str
 
     class Config:
         env_prefix = 'RABBITMQ_'
-        env_file_encoding = "utf-8"
+        env_file_encoding = 'utf-8'
+
+    
+class RedisSettings(Settings):
+    HOST: str
+    PORT: int
+
+    class Config:
+        env_prefix = 'REDIS_'
+        env_file_encoding = 'utf-8'
 
 
 RABBITMQ_CONFIG = RabbitMQSettings()
-
-
+REDIS_CONFIG = RedisSettings()
 BACKOFF_CONFIG = {'wait_gen': backoff.expo, 'exception': Exception, 'max_value': 128}
 
 
 class CelerySettings(Settings):
-    name = 'Builder'
-    broker = (
-        f'pyamqp://{RABBITMQ_CONFIG.DEFAULT_USER}:{RABBITMQ_CONFIG.DEFAULT_PASS}'
-        f'@{RABBITMQ_CONFIG.HOST}:{RABBITMQ_CONFIG.PORT}{RABBITMQ_CONFIG.DEFAULT_VHOST}'
-    )
-    backend = f'pyamqp://{RABBITMQ_CONFIG.HOST}:{RABBITMQ_CONFIG.PORT}/0'
+    NAME = 'Builder'
+    BROKER = f'redis://{REDIS_CONFIG.HOST}:{REDIS_CONFIG.PORT}/0'
+    BACKEND = f'redis://{REDIS_CONFIG.HOST}:{REDIS_CONFIG.PORT}/0'
 
 
 CELERY_CONFIG = CelerySettings()

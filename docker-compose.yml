@@ -17,6 +17,18 @@ x-base-rabbitmq: &base_rabbitmq
       retries: 10
     entrypoint: /usr/local/bin/cluster-entrypoint.sh
 
+x-redis: &base_redis
+  image: redis:7.0-alpine
+  container_name: redis
+  restart: unless-stopped
+  ports:
+    - ${REDIS_PORT}:6379
+  healthcheck:
+    test: ["CMD", "redis-cli","ping"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+
 services:
   rabbitmq1:
     <<: *base_service
@@ -149,6 +161,31 @@ services:
     ports:
       - ${PROJECT_NOTICE_API_PORT}:${PROJECT_NOTICE_API_PORT}
 
+  redis:
+    <<: *base_service
+    <<: *base_redis
+    env_file: .env
+    profiles:
+      - notice
+    volumes:
+      - redis-data:/data
+
+  builder:
+    <<: *base_service
+    build: ./backend/builder
+    container_name: builder
+    restart: unless-stopped
+    profiles: 
+      - notice
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+    env_file: .env
+
 networks:
   notice:
     driver: bridge
@@ -157,3 +194,4 @@ volumes:
     rabbitmq_data:
     rabbitmq_log:
     notice_db_volume:
+    redis-data:

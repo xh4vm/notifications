@@ -29,10 +29,3 @@ class RabbitMQProducer(BaseProducer, RabbitMQEvent):
             )
         logger.info('<{0}>.<{1}> Message: <{2}>.<{3}>'.format(self.service_name, self.queue.name, header, payload))
         return True
-
-
-producer = RabbitMQProducer()
-
-
-async def get_producer() -> BaseProducer:
-    return producer
