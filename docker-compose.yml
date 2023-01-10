@@ -117,8 +117,8 @@ services:
       - ${PROJECT_NOTICE_API_PORT}
     volumes:
       - ./backend/notice_api:/opt/content
-      - ./backend/notice_api/static/info.log:/var/log/feedbacks/info.log
-      - ./backend/notice_api/static/error.log:/var/log/feedbacks/error.log
+      - ./backend/notice_api/static/info.log:/var/log/notice_api/info.log
+      - ./backend/notice_api/static/error.log:/var/log/notice_api/error.log
     healthcheck:
       test: curl http://notice-api:${PROJECT_NOTICE_API_PORT} >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 3s
@@ -140,7 +140,7 @@ services:
       - "5432:5432"
     <<: *base_service
     volumes:
-      - notice_db_volume:/var/lib/postgresql/data
+      - notice_db_volume_prod:/var/lib/postgresql/data
     profiles:
       - notice
       - admin_panel
@@ -150,8 +150,74 @@ services:
     profiles:
       - admin_panel
       - redis
+      - notice
     volumes:
       - redis-data:/data
+
+  notice-admin_panel:
+    <<: *base_service
+    build: ./backend/admin_panel
+    container_name: notice-admin_panel
+    hostname: notice-admin_panel
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:$ADMIN_PANEL_PORT
+    env_file: .env
+    environment:
+      - DJANGO_SERVICE=notice-admin_panel
+    profiles:
+      - notice
+    expose:
+      - ${ADMIN_PANEL_PORT}
+    volumes:
+      - ./backend/admin_panel:/opt/content
+      - ./backend/admin_panel/static/info.log:/var/log/admin_panel/info.log
+      - ./backend/admin_panel/static/error.log:/var/log/admin_panel/error.log
+      - staticfiles_volume:/opt/content/staticfiles
+      - mediafiles_volume:/opt/content/mediafiles
+    healthcheck:
+      test: curl http://notice-admin_panel:${ADMIN_PANEL_PORT} >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 3s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - notice_db
+      - redis
+
+  notice-admin_panel-celery:
+    <<: *base_service
+    build: ./backend/admin_panel
+    container_name: notice-admin_panel-celery
+    hostname: notice-admin_panel-celery
+    command: celery --app=notice worker -l info
+    env_file: .env
+    profiles:
+      - notice
+    volumes:
+      - ./backend/admin_panel:/opt/content
+      - ./backend/admin_panel/static/info.log:/var/log/admin_panel/info.log
+      - ./backend/admin_panel/static/error.log:/var/log/admin_panel/error.log
+      - staticfiles_volume:/opt/content/staticfiles
+      - mediafiles_volume:/opt/content/mediafiles
+    depends_on:
+      - notice-admin_panel
+      - notice-api
+
+  notice-admin_panel-celery_beat:
+    <<: *base_service
+    build: ./backend/admin_panel
+    container_name: notice-admin_panel-celery_beat
+    hostname: notice-admin_panel-celery_beat
+    command: celery --app=notice beat --scheduler django -l info
+    env_file: .env
+    profiles:
+      - notice
+    volumes:
+      - ./backend/admin_panel:/opt/content
+      - ./backend/admin_panel/static/info.log:/var/log/admin_panel/info.log
+      - ./backend/admin_panel/static/error.log:/var/log/admin_panel/error.log
+      - staticfiles_volume:/opt/content/staticfiles
+      - mediafiles_volume:/opt/content/mediafiles
+    depends_on:
+      - notice-admin_panel-celery
 
   nginx:
     <<: *base_service
@@ -163,14 +229,19 @@ services:
     depends_on:
       notice-api:
         condition: service_healthy
+      notice-admin_panel:
+        condition: service_healthy
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/configs:/etc/nginx/conf.d:ro
       - ./nginx/static/errors:/var/www/errors/:ro
       - ./nginx/static/log/access_log:/var/log/nginx/access.log:rw
       - ./nginx/static/log/error_log:/var/log/nginx/error.log:rw
+      - staticfiles_volume:/data/staticfiles/:ro
+      - mediafiles_volume:/data/mediafiles/:ro
     ports:
       - ${PROJECT_NOTICE_API_PORT}:${PROJECT_NOTICE_API_PORT}
+      - ${ADMIN_PANEL_PORT}:${ADMIN_PANEL_PORT}
 
 networks:
   notice:
@@ -179,5 +250,7 @@ networks:
 volumes:
     rabbitmq_data:
     rabbitmq_log:
-    notice_db_volume:
+    notice_db_volume_prod:
     redis-data:
+    staticfiles_volume:
+    mediafiles_volume:

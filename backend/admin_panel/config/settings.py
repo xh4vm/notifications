@@ -24,7 +24,7 @@ SECRET_KEY = environ.get('SECRET_KEY')
 DEBUG = environ.get('DEBUG', False) == 'True'
 
 
-ALLOWED_ORIGINS = ['http://*', 'https://*']
+ALLOWED_ORIGINS = ['http://127.0.0.1:8001', ]
 CSRF_TRUSTED_ORIGINS = ALLOWED_ORIGINS.copy()
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '127.0.0.1').split(',')
 

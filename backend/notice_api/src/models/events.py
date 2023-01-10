@@ -40,7 +40,7 @@ class NewFilmsInPeriod(BaseMixin):
 class EventMovies(BaseMixin):
     """ Class for event model. """
 
-    time_zone: list[str]
+    time_zone: list[str] | None
     name_of_event_source: str
     name_type_event: str
     context: (NewReviewsLikes | EventNewEpisode | EventFromAdmin |

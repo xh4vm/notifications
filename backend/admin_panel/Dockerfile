@@ -19,10 +19,13 @@ COPY --from=admin_panel-builder /opt /opt
 
 WORKDIR /opt/content
 
-ENTRYPOINT ["/bin/bash", "-c", "chmod +x ./start.sh && ./start.sh"]
+#ENTRYPOINT ["/bin/bash", "-c", "chmod +x ./start.sh && ./start.sh"]
 
 COPY . .
 
-RUN mkdir -p /opt/content/staticfiles && mkdir -p /opt/content/mediafiles
+RUN mkdir -p /opt/content/staticfiles && mkdir -p /opt/content/mediafiles && \
+    pip install --no-index --find-links=/opt/wheels -r requirements.txt
 
-RUN pip install --no-index --find-links=/opt/wheels -r requirements.txt
+RUN chmod +x  ./start.sh
+
+ENTRYPOINT ["./start.sh"]
