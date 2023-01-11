@@ -39,7 +39,7 @@ def send_to_notice_api(name_source, name_event, data):
         url=settings.NOTICE_API_ENTRYPOINT,
         method='post',
         params={
-            'headers': {'X-Authorization-Token': 'Bearer {0}'.format(access_token)},
+            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
             'data': message_to_queue.json(exclude={'film_id'})
         },
         model=ResponseBoolResult,
@@ -116,7 +116,7 @@ def get_new_likes(make_request_func, access_token):
         url=settings.FEEDBACKS_API_NEW_LIKES_ENTRYPOINT,
         method='get',
         params={
-            'headers': {'X-Authorization-Token': 'Bearer {0}'.format(access_token)},
+            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
         },
         model=NewReviewsLikes,
     )
@@ -128,7 +128,7 @@ def get_film_name(make_request_func, access_token, film_id):
         url=settings.CONTENT_API_FILM_NAME,
         method='get',
         params={
-            'headers': {'X-Authorization-Token': 'Bearer {0}'.format(access_token)},
+            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
             'data': {'film_id': film_id}
         },
         model=FilmName,
@@ -146,7 +146,7 @@ def get_forgotten_bookmarks(make_request_func, access_token):
         url=settings.FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT,
         method='get',
         params={
-            'headers': {'X-Authorization-Token': 'Bearer {0}'.format(access_token)},
+            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
         },
         model=ForgottenUserBookmarks,
     )
@@ -158,7 +158,7 @@ def get_new_movies_for_period(make_request_func, access_token, days):
         url=settings.CONTENT_API_NEW_MOVIES,
         method='get',
         params={
-            'headers': {'X-Authorization-Token': 'Bearer {0}'.format(access_token)},
+            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
             'data': {'days': days}
         },
         model=NewMoviesForPeriod,

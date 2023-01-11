@@ -159,3 +159,4 @@ CONTENT_API_FILM_NAME = '{0}/film_name'.format(environ.get('CONTENT_API_HOST'))
 
 AUTH_JWT_SECRET_KEY = environ.get('AUTH_JWT_SECRET_KEY')
 AUTH_JWT_DECODE_ALGORITHMS = re.findall(r'\"(.+?)\"', environ.get('AUTH_JWT_DECODE_ALGORITHMS'))
+AUTH_JWT_HEADER_NAME = environ.get('AUTH_JWT_HEADER_NAME', 'X-Authorization-Token')
