@@ -18,7 +18,6 @@ x-base-rabbitmq: &base_rabbitmq
     entrypoint: /usr/local/bin/cluster-entrypoint.sh
 
 x-redis: &base_redis
-  <<: *base_service
   image: redis:7.0-alpine
   container_name: redis
   restart: unless-stopped
@@ -131,8 +130,8 @@ services:
       POSTGRES_USER: $NOTICE_DB_USER
       POSTGRES_DB: $NOTICE_DB_NAME
     restart: always
-    expose:
-      - 5432
+    ports:
+      - 5432:5432
     volumes:
       - notice_db_volume_prod:/var/lib/postgresql/data
     profiles:
@@ -145,11 +144,13 @@ services:
       retries: 5
 
   redis:
+    <<: *base_service
     <<: *base_redis
     profiles:
       - admin_panel
       - redis
       - notice
+    env_file: .env
     volumes:
       - redis-data:/data
 
@@ -242,15 +243,6 @@ services:
       - ${PROJECT_NOTICE_API_PORT}:${PROJECT_NOTICE_API_PORT}
       - ${ADMIN_PANEL_PORT}:${ADMIN_PANEL_PORT}
 
-  redis:
-    <<: *base_service
-    <<: *base_redis
-    env_file: .env
-    profiles:
-      - notice
-    volumes:
-      - redis-data:/data
-
   builder:
     <<: *base_service
     build: ./backend/builder
@@ -281,6 +273,8 @@ services:
         condition: service_healthy
       rabbitmq3:
         condition: service_healthy
+      smtp-server:
+        condition: service_healthy
     env_file: .env
 
   smtp-server:
@@ -295,12 +289,16 @@ services:
       - ./smtp/dkim:/etc/postfix/dkim/
     environment:
       - ALIASES=postmaster:root;hostmaster:root;webmaster:root
-      # - DISABLE_DKIM=true
     expose:
       - 25
     command:
       - ${SMTP_DOMAIN}
       - ${SMTP_USER_NO_REPLY}
+    healthcheck:
+      test: netstat -l | grep smtp
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   notice:
