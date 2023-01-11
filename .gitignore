@@ -148,3 +148,5 @@ commands.md
 *__pycache__
 .env
 ./backend/*/.dockerignore
+
+maildirs/

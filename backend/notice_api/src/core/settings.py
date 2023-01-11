@@ -12,7 +12,7 @@ class RabbitMQSettings(BaseSettings):
     default_user: str
     default_pass: str
     default_vhost: str
-    queue_name: str
+    # queue_name: str
 
     class Config:
         env_prefix = 'RABBITMQ_'

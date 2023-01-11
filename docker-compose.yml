@@ -186,6 +186,41 @@ services:
         condition: service_healthy
     env_file: .env
 
+  sender:
+    <<: *base_service
+    build: ./backend/sender
+    container_name: sender
+    restart: unless-stopped
+    profiles: 
+      - notice
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+    env_file: .env
+
+  smtp-server:
+    <<: *base_service
+    image: marvambass/versatile-postfix
+    container_name: smtp-server
+    restart: unless-stopped
+    profiles: 
+      - notice
+    volumes:
+      - ./smtp/maildirs:/var/mail
+      - ./smtp/dkim:/etc/postfix/dkim/
+    environment:
+      - ALIASES=postmaster:root;hostmaster:root;webmaster:root
+      # - DISABLE_DKIM=true
+    expose:
+      - 25
+    command:
+      - ${SMTP_DOMAIN}
+      - ${SMTP_USER_NO_REPLY}
+
 networks:
   notice:
     driver: bridge

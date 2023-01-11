@@ -40,7 +40,7 @@ async def startup():
         login=SETTINGS.rabbitmq.default_user,
         password=SETTINGS.rabbitmq.default_pass,
         service_name=SETTINGS.name,
-        queue_name=SETTINGS.rabbitmq.queue_name,
+        queue_name='builder',
     )
 
 

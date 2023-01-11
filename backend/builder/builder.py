@@ -17,10 +17,18 @@ producer: RabbitMQProducer = RabbitMQProducer(publisher_queue=RABBITMQ_QUEUE_CON
 async def message_handler(message: dict[str, Any]):
     #TODO get template by event_id
     template = 'Hi! {{ user_id }}'
+    subject = 'Something subject'
+    rcpt_to_users = ['xoklhyip@yandex.ru', 'h4vm@yandex.ru']
+
     jinja2_rd = Jinja2Renderer()
     message = await jinja2_rd.render(template=template, data=message.get('context'))
 
-    await producer.publish(header='', payload=orjson.dumps(message))
+    payload = orjson.dumps({
+        'subject': subject,
+        'rcpt_to_users': rcpt_to_users,
+        'message': message,
+    })
+    await producer.publish(header='', payload=payload)
 
 
 async def builder():

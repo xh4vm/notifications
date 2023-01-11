@@ -22,7 +22,7 @@ class RabbitMQConsumer(BaseConsumer, RabbitMQEventManager):
         super().__init__(**kwargs)
         self.subscriber_queue = subscriber_queue
 
-    @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
+    # @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
     async def subscribe(self, callback: Optional[Coroutine[Any, dict[str, Any], None]] = None, **kwargs) -> None:
         async with self.channel_pool.acquire() as channel:
             await channel.set_qos(prefetch_count=10)
