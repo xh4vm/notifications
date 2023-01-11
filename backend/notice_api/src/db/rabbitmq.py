@@ -47,12 +47,12 @@ class RabbitMQProducer(AsyncProducer):
             **kwargs
     ):
         self.service_name = service_name
+
         self.connection = await aio_pika.connect_robust(host=host, port=port, login=login, password=password)
 
         self.channel = await self.connection.channel()
 
         self.queue = await self.channel.declare_queue(name='builder', durable=True)
-        # self.queue = await self.channel.declare_queue(name=queue_name, durable=True)
 
     @test_connection
     async def send_event(self, header: str, payload: str, **kwargs):

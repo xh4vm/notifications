@@ -3,10 +3,9 @@
 import logging
 
 import uvicorn as uvicorn
-from fastapi import FastAPI
-# from fastapi import Request
-# from fastapi.responses import JSONResponse
-from fastapi.responses import ORJSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, ORJSONResponse
+from modules.auth.src.exceptions.access import AccessException
 from src.api.v1 import events
 from src.core.config import SETTINGS
 from src.core.logger import LOGGING
@@ -50,12 +49,12 @@ async def shutdown():
     await producer.connection.close()
 
 
-# @app.exception_handler(AccessException)
-# def authjwt_exception_handler(request: Request, exc: AccessException):
-#     return JSONResponse(
-#         status_code=exc.status,
-#         content={"detail": exc.message}
-#     )
+@app.exception_handler(AccessException)
+def authjwt_exception_handler(request: Request, exc: AccessException):
+    return JSONResponse(
+        status_code=exc.status,
+        content={"detail": exc.message}
+    )
 
 
 app.include_router(events.router, prefix='/api/v1/events')

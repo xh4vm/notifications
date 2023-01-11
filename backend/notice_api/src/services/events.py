@@ -27,7 +27,7 @@ class RabbitMQProducerService(BaseProducerService):
         self.errors = {}
 
     async def send_event(self, params: EventMovies, **kwargs):
-        payload_str = params.json(exclude={'name_of_event_source'})
+        payload_str = params.json()
         return await self.producer.send_event(header=params.name_of_event_source, payload=payload_str)
 
 

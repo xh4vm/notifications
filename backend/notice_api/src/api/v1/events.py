@@ -1,6 +1,6 @@
 """ Router for Likes service. """
-
 from fastapi import APIRouter, Depends, Request
+from modules.auth.src.payloads.fastapi import UserAccessRequired
 from src.api.v1.params import EventParams
 from src.api.v1.utilitys import check_result, get_context
 from src.core.config import SETTINGS
@@ -23,6 +23,7 @@ URL = f'{SETTINGS.notice_api_host}:{SETTINGS.notice_api_port}\
 )
 async def send_event(
         request: Request,
+        current_user_id: str = Depends(UserAccessRequired(permissions={URL: 'POST'})),
         params: EventParams = Depends(),
         obj_service: RabbitMQProducerService = Depends(get_event_service),
 ) -> ResponseBoolResult:
@@ -30,6 +31,7 @@ async def send_event(
 
     Arguments:
         request: request
+        current_user_id:
         params:
         obj_service: service object
 

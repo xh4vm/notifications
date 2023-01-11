@@ -12,3 +12,11 @@ DATABASES = {
         }
     }
 }
+
+KEY_VALUE_DB_SETTINGS = {
+    'host': environ.get('REDIS_HOST', '127.0.0.1'),
+    'port': environ.get('REDIS_PORT', 6379),
+    'db': environ.get('REDIS_DB', 1),
+    'charset': 'utf-8',
+    'decode_responses': True
+}

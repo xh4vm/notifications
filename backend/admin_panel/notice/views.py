@@ -4,4 +4,4 @@ from django.shortcuts import HttpResponse
 
 
 def home(request):
-    return HttpResponse('<h1>MOVIES PROJECT!</h1>')
+    return HttpResponse('<h3>This service is only for work with admin panel.</h3>')

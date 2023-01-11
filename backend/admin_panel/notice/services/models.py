@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import orjson
 from pydantic import BaseModel
 
@@ -18,25 +20,67 @@ class BaseMixin(BaseModel):
         cache_free = False
 
 
-class MoviesUser(BaseMixin):
+class NewReviewLikes(BaseMixin):
     user_id: str
-
-
-class MoviesFilm(BaseMixin):
     film_id: str
+    likes: list[str]
 
 
-class NewLikes(BaseMixin):
-    user: MoviesUser
-    film: MoviesFilm
-    likes: list[MoviesUser]
+class FilmName(BaseMixin):
+    film_id: str
+    film_name: str
 
 
-class ForgottenBookmarks(BaseMixin):
-    user: MoviesUser
-    films: list[MoviesFilm]
+class NewReviewsLikes(BaseMixin):
+    request_date: datetime
+    new_reviews_likes: list[NewReviewLikes]
+
+
+class NewReviewLikesOut(BaseMixin):
+    request_date: datetime
+    user_id: str
+    film_name: str = None
+    likes: list[str]
+
+
+class ForgottenUserBookmarks(BaseMixin):
+    user_id: str
+    films: list[str]
 
 
 class NewMoviesForPeriod(BaseMixin):
     period_days: int
-    films: list[MoviesFilm]
+    films: list[str]
+
+
+class MovieEvent(BaseMixin):
+    time_zone: list[str]
+    name_of_event_source: str
+    name_type_event: str
+    context: NewReviewLikesOut | ForgottenUserBookmarks | NewMoviesForPeriod | None
+    created: datetime
+
+
+class MoviesTokens(BaseMixin):
+    access_token: str
+    refresh_token: str
+
+
+class ResponseBoolResult(BaseMixin):
+    result: bool
+
+
+class ResultResponse(BaseMixin):
+    status: int
+    body: (NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod |
+           MoviesTokens | FilmName | ResponseBoolResult) = None
+
+
+class GeneratorResponse(BaseMixin):
+    event: MovieEvent
+    api_notice_response: ResultResponse = None
+
+
+class ErrorResponse(BaseMixin):
+    status: int
+    body: dict
