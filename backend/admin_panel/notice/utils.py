@@ -1,8 +1,11 @@
 import re
+from datetime import datetime, time
 from functools import wraps
+from http import HTTPStatus
 
 import backoff
 import jwt
+import pytz
 import requests
 from django.conf import settings
 from loguru import logger
@@ -11,16 +14,17 @@ from notice.services.models import ErrorResponse, ResultResponse
 from redis.exceptions import ConnectionError
 
 
-def make_request(url, method, params):
+def make_request(url, method, params, model):
     """ Make request to API.
 
     Arguments:
         url: full api url
         method: request method
         params: parameters for query
+        model: model for body
 
     Returns:
-        list: result
+        ResultResponse: result
     """
 
     session = requests.session()
@@ -29,7 +33,16 @@ def make_request(url, method, params):
         body = response.json() if response.ok else None
         status = response.status_code
     session.close()
-    return ResultResponse(status=status, body=body)
+
+    if status != HTTPStatus.OK:
+        return ErrorResponse(status=status, body=body)
+
+    result = ResultResponse(
+        status=status,
+        body=[model(**unit_body) for unit_body in body] if isinstance(body, list) else model(**body),
+    )
+
+    return result
 
 
 def validate_doctype(value: str):
@@ -86,3 +99,23 @@ def get_token_exp(token) -> float | ErrorResponse:
         return ErrorResponse(status=False, body=TokenError.DECODE_ERROR)
 
     return payload.get('exp')
+
+
+def create_time_zones_list(min_time: int = 0, max_time: int = 23) -> list[str]:
+    result = []
+    all_time_zones = pytz.all_timezones
+    min_time = time(min_time, 0, 0)
+    max_time = time(max_time, 59, 59)
+
+    for time_zone_name in all_time_zones:
+        time_zone_time = datetime.now(pytz.timezone(time_zone_name)).time()
+
+        if min_time < max_time and (min_time <= time_zone_time <= max_time):
+            result.append(time_zone_name)
+
+        if min_time > max_time and (
+                min_time <= time_zone_time <= time(23, 59, 59) or time(0, 0, 0) <= time_zone_time <= max_time
+        ):
+            result.append(time_zone_name)
+
+    return result

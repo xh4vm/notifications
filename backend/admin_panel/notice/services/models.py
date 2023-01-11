@@ -26,9 +26,21 @@ class NewReviewLikes(BaseMixin):
     likes: list[str]
 
 
+class FilmName(BaseMixin):
+    film_id: str
+    film_name: str
+
+
 class NewReviewsLikes(BaseMixin):
     request_date: datetime
     new_reviews_likes: list[NewReviewLikes]
+
+
+class NewReviewLikesOut(BaseMixin):
+    request_date: datetime
+    user_id: str
+    film_name: str = None
+    likes: list[str]
 
 
 class ForgottenUserBookmarks(BaseMixin):
@@ -42,19 +54,26 @@ class NewMoviesForPeriod(BaseMixin):
 
 
 class MovieEvent(BaseMixin):
+    time_zone: list[str]
     name_of_event_source: str
     name_type_event: str
-    context: NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod | None
+    context: NewReviewLikesOut | ForgottenUserBookmarks | NewMoviesForPeriod | None
+    created: datetime
 
 
-# class ResponseAPINotice(BaseMixin):
-#     status: int
-#     body: dict = None
+class MoviesTokens(BaseMixin):
+    access_token: str
+    refresh_token: str
+
+
+class ResponseBoolResult(BaseMixin):
+    result: bool
 
 
 class ResultResponse(BaseMixin):
     status: int
-    body: dict = None
+    body: (NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod |
+           MoviesTokens | FilmName | ResponseBoolResult) = None
 
 
 class GeneratorResponse(BaseMixin):
