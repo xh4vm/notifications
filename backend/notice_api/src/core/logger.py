@@ -1,4 +1,4 @@
-LOG_DEFAULT_HANDLERS = ['info_rotating_file_handler', ]
+LOG_DEFAULT_HANDLERS = ['console', 'info_rotating_file_handler', ]
 
 LOGGING = {
     'version': 1,
@@ -36,7 +36,7 @@ LOGGING = {
     },
     'loggers': {
         '': {
-            'handlers': ['info_rotating_file_handler', 'error_file_handler', ],
+            'handlers': ['console', 'info_rotating_file_handler', 'error_file_handler', ],
             'level': 'INFO',
         },
         'uvicorn.error': {

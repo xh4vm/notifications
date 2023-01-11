@@ -15,7 +15,7 @@ class BaseProducerService(ABC):
 
 
 class RabbitMQProducerService(BaseProducerService):
-    """ Class RabbitMQProducerService."""
+    """Class RabbitMQProducerService."""
 
     model: None
     errors = None

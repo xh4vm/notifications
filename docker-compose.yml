@@ -10,10 +10,14 @@ x-base-rabbitmq: &base_rabbitmq
       - ./backend/rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
       - rabbitmq_data:/var/lib/rabbitmq/
       - rabbitmq_log:/var/log/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 30s
+      timeout: 30s
+      retries: 10
     entrypoint: /usr/local/bin/cluster-entrypoint.sh
 
 x-redis: &base_redis
-  <<: *base_service
   image: redis:7.0-alpine
   container_name: redis
   restart: unless-stopped
@@ -31,16 +35,12 @@ services:
     container_name: rabbitmq1
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq1
+    env_file: .env
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_DEFAULT_VHOST}
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -50,17 +50,13 @@ services:
     container_name: rabbitmq2
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq2
+    env_file: .env
     depends_on:
       rabbitmq1:
         condition: service_healthy
     environment:
       - JOIN_CLUSTER_HOST=rabbitmq1
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -70,17 +66,13 @@ services:
     container_name: rabbitmq3
     image: rabbitmq:3.11.5-management
     hostname: rabbitmq3
+    env_file: .env
     depends_on:
       rabbitmq2:
         condition: service_healthy
     environment:
       - JOIN_CLUSTER_HOST=rabbitmq1
     <<: *base_rabbitmq
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 30s
-      timeout: 30s
-      retries: 10
     profiles:
       - notice
       - rabbitmq
@@ -129,29 +121,36 @@ services:
       - haproxy
 
   notice_db:
+    <<: *base_service
     container_name: notice_db
     hostname: notice_db
-    image: postgres:13
+    image: postgres:13-alpine
     environment:
       POSTGRES_PASSWORD: $NOTICE_DB_PASSWORD
       POSTGRES_USER: $NOTICE_DB_USER
       POSTGRES_DB: $NOTICE_DB_NAME
     restart: always
     ports:
-      - "5432:5432"
-    <<: *base_service
+      - 5432:5432
     volumes:
       - notice_db_volume_prod:/var/lib/postgresql/data
     profiles:
       - notice
       - admin_panel
+    healthcheck:
+      test: pg_isready -U ${NOTICE_DB_USER} -D ${NOTICE_DB_NAME} > /dev/null; if [[ $$? == 0 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   redis:
+    <<: *base_service
     <<: *base_redis
     profiles:
       - admin_panel
       - redis
       - notice
+    env_file: .env
     volumes:
       - redis-data:/data
 
@@ -243,6 +242,63 @@ services:
     ports:
       - ${PROJECT_NOTICE_API_PORT}:${PROJECT_NOTICE_API_PORT}
       - ${ADMIN_PANEL_PORT}:${ADMIN_PANEL_PORT}
+
+  builder:
+    <<: *base_service
+    build: ./backend/builder
+    container_name: builder
+    restart: unless-stopped
+    profiles: 
+      - notice
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+    env_file: .env
+
+  sender:
+    <<: *base_service
+    build: ./backend/sender
+    container_name: sender
+    restart: unless-stopped
+    profiles: 
+      - notice
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+      smtp-server:
+        condition: service_healthy
+    env_file: .env
+
+  smtp-server:
+    <<: *base_service
+    image: marvambass/versatile-postfix
+    container_name: smtp-server
+    restart: unless-stopped
+    profiles: 
+      - notice
+    volumes:
+      - ./smtp/maildirs:/var/mail
+      - ./smtp/dkim:/etc/postfix/dkim/
+    environment:
+      - ALIASES=postmaster:root;hostmaster:root;webmaster:root
+    expose:
+      - 25
+    command:
+      - ${SMTP_DOMAIN}
+      - ${SMTP_USER_NO_REPLY}
+    healthcheck:
+      test: netstat -l | grep smtp
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   notice:

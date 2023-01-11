@@ -38,7 +38,7 @@ class NewFilmsInPeriod(BaseMixin):
 
 
 class EventMovies(BaseMixin):
-    """ Class for event model. """
+    """Class for event model."""
 
     time_zone: list[str] | None
     name_of_event_source: str
