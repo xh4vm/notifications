@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, time
 from functools import wraps
+from http import HTTPStatus
 
 import backoff
 import jwt
@@ -13,13 +14,14 @@ from notice.services.models import ErrorResponse, ResultResponse
 from redis.exceptions import ConnectionError
 
 
-def make_request(url, method, params):
+def make_request(url, method, params, model):
     """ Make request to API.
 
     Arguments:
         url: full api url
         method: request method
         params: parameters for query
+        model: model for body
 
     Returns:
         ResultResponse: result
@@ -31,7 +33,16 @@ def make_request(url, method, params):
         body = response.json() if response.ok else None
         status = response.status_code
     session.close()
-    return ResultResponse(status=status, body=body)
+
+    if status != HTTPStatus.OK:
+        return ErrorResponse(status=status, body=body)
+
+    result = ResultResponse(
+        status=status,
+        body=[model(**unit_body) for unit_body in body] if isinstance(body, list) else model(**body),
+    )
+
+    return result
 
 
 def validate_doctype(value: str):

@@ -110,6 +110,7 @@ services:
     <<: *base_service
     build: ./backend/notice_api
     container_name: notice-api
+    hostname: notice-api
     env_file: .env
     profiles:
       - notice
