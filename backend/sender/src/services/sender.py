@@ -3,12 +3,13 @@ nest_asyncio.apply()
 import asyncio
 from abc import ABC, abstractmethod
 from typing import Optional
-from email.message import EmailMessage
+from pathlib import Path
+from email import encoders
 import mimetypes
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from aiosmtplib import send, SMTP
+from aiosmtplib import SMTP
 from loguru import logger
 
 
@@ -16,7 +17,7 @@ class BaseSender(ABC):
 
     @abstractmethod
     async def send(self, **kwargs) -> None:
-        '''Метод '''
+        '''Метод отправки сообщения'''
 
 
 class SmtpSender(BaseSender):
@@ -55,13 +56,37 @@ class SmtpSender(BaseSender):
 
         return asyncio.run(self.reconnect())
 
-    async def send(self, to: str, subject: str, data: str, **kwargs):
-        message = EmailMessage()
+    def attached_file(self, file_path: str) -> MIMEBase:
+        ctype, encoding = mimetypes.guess_type(file_path)
+
+        if ctype is None or encoding is not None:
+            ctype = 'application/octet-stream'
+        
+        maintype, subtype = ctype.split('/', 1)
+        
+        file = MIMEBase(maintype, subtype)
+
+        with open(file_path, 'rb') as fd:
+            content = fd.read()
+            file.set_payload(content)
+        
+        encoders.encode_base64(file)
+        file.add_header('Content-Disposition', 'attachment', filename=file_path)
+
+        return file
+
+    async def send(self, to: str, subject: str, data: str, file_path: Optional[str] = None, **kwargs):
+        message = MIMEMultipart()
 
         message['From'] = self.mail_from
         message['To'] = to
         message['Subject'] = subject
 
-        message.set_content(data)
+        body = MIMEText(data)
+        message.attach(body)
+
+        if file_path is not None and Path(file_path).is_file():
+            attached_file = self.attached_file(file_path)
+            message.attach(attached_file)
         
         await self.conn.sendmail(self.mail_from, to, message.as_string())

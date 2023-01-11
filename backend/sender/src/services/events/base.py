@@ -1,13 +1,10 @@
 import asyncio
-import backoff
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
-from loguru import logger
 from aio_pika import connect_robust, Channel
 from aio_pika.pool import Pool
 from aio_pika.abc import AbstractRobustConnection
 
-from src.config.config import BACKOFF_CONFIG, RabbitMQSettings, RABBITMQ_CONFIG
+from src.config.config import RabbitMQSettings, RABBITMQ_CONFIG
 
 
 class BaseEventManager(ABC):
