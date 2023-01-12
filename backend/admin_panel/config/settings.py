@@ -24,15 +24,14 @@ SECRET_KEY = environ.get('SECRET_KEY')
 DEBUG = environ.get('DEBUG', False) == 'True'
 
 
-ALLOWED_ORIGINS = ['http://127.0.0.1:8001', ]
-CSRF_TRUSTED_ORIGINS = ALLOWED_ORIGINS.copy()
+CSRF_TRUSTED_ORIGINS = environ.get('CORS_ALLOWED_ORIGINS').split(',')
+CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS.copy()
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 if DEBUG:
     INTERNAL_IPS = environ.get('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

@@ -56,6 +56,7 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
     """Class for the type event model."""
 
     name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
+    subject = models.TextField(_('Subject'), max_length=512)
     template_file = models.FileField(
         upload_to=settings.EMAILS_TEMPLATE_PATH,
         validators=[validate_file_contents]

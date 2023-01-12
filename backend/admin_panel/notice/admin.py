@@ -13,8 +13,8 @@ class TypeEventAdmin(admin.ModelAdmin):
     """Displaying the TypeEvent model in the admin panel."""
 
     search_fields = ('name',)
-    fields = ['name', 'template_file', 'template_params', 'created']
-    list_display = ('name', 'template_file', 'template_params', 'created')
+    fields = ['name', 'subject', 'template_file', 'template_params', 'created']
+    list_display = ('name', 'subject', 'template_file', 'template_params', 'created')
     readonly_fields = ('id', 'created', 'modified', 'template_params')
 
     def save_model(self, request, obj, form, change):

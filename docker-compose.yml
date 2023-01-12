@@ -250,6 +250,8 @@ services:
     restart: unless-stopped
     profiles: 
       - notice
+    volumes:
+      - mediafiles_volume:/opt/mediafiles/:ro
     depends_on:
       rabbitmq1:
         condition: service_healthy

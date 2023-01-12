@@ -20,7 +20,7 @@ class RabbitMQProducer(BaseProducer, RabbitMQEventManager):
         super().__init__(**kwargs)
         self.publisher_queue = publisher_queue
 
-    @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
+    # @backoff.on_exception(**BACKOFF_CONFIG, logger=logger)
     async def publish(self, header: str, payload: bytes, **kwargs) -> None:
         async with self.channel_pool.acquire() as channel:
             exchange = await channel.declare_exchange('exchange:builder_to_sender', durable=True)

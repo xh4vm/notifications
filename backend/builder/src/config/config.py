@@ -1,10 +1,23 @@
 import backoff
-from pydantic import BaseSettings
+from pydantic import BaseSettings, Field
 
 
 class Settings(BaseSettings):
     class Config:
         env_file = '../../.env'
+
+
+class NoticeDBSettings(BaseSettings):
+    SCHEMA_NAME: str = Field('content')
+    DRIVER: str
+    USER: str
+    PASSWORD: str
+    HOST: str
+    PORT: int
+    NAME: str
+
+    class Config:
+        env_prefix = 'NOTICE_DB_'
 
 
 class RabbitMQSettings(BaseSettings):
@@ -30,4 +43,5 @@ class RabbitMQQueueSettings(BaseSettings):
 
 RABBITMQ_CONFIG = RabbitMQSettings()
 RABBITMQ_QUEUE_CONFIG = RabbitMQQueueSettings()
+NOTICE_DB_CONFIG = NoticeDBSettings()
 BACKOFF_CONFIG = {'wait_gen': backoff.expo, 'exception': Exception, 'max_value': 128}
