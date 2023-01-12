@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rabbitmq"
+name = "notifications"
 version = "0.1.0"
 description = ""
 authors = ["Kariyma <mariika-sun@yandex.ru>"]
