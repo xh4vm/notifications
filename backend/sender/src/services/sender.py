@@ -2,14 +2,14 @@ import nest_asyncio
 nest_asyncio.apply()
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 from pathlib import Path
 from email import encoders
 import mimetypes
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from aiosmtplib import SMTP
+from aiosmtplib import SMTP, SMTPResponse
 from loguru import logger
 
 
@@ -69,17 +69,23 @@ class SmtpSender(BaseSender):
         with open(file_path, 'rb') as fd:
             content = fd.read()
             file.set_payload(content)
-        
+
         encoders.encode_base64(file)
         file.add_header('Content-Disposition', 'attachment', filename=file_path)
 
         return file
 
-    async def send(self, to: str, subject: str, data: str, file_path: Optional[str] = None, **kwargs):
+    async def send(
+        self,
+        recipients: list[str],
+        subject: str,
+        data: str,
+        file_path: Optional[str] = None,
+        **kwargs
+    ) -> tuple[dict[str, SMTPResponse], str]:
         message = MIMEMultipart()
 
         message['From'] = self.mail_from
-        message['To'] = to
         message['Subject'] = subject
 
         body = MIMEText(data)
@@ -89,4 +95,4 @@ class SmtpSender(BaseSender):
             attached_file = self.attached_file(file_path)
             message.attach(attached_file)
         
-        await self.conn.sendmail(self.mail_from, to, message.as_string())
+        return await self.conn.sendmail(sender=self.mail_from, recipients=recipients, message=message.as_string())
