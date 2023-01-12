@@ -24,7 +24,7 @@ smtp_client = SmtpSender(
 
 async def message_handler(message: dict[str, Any]):
     subject = message.get('subject')
-    recipients = message.get('rcpt_to_users')
+    recipients = message.get('recipients')
     data = message.get('message')
 
     await smtp_client.send(recipients=recipients, subject=subject, data=data)

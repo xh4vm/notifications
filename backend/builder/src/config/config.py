@@ -41,7 +41,16 @@ class RabbitMQQueueSettings(BaseSettings):
         env_file_encoding = 'utf-8'
 
 
+class BuilderSettings(BaseSettings):
+    MEDIAFILES: str
+
+    class Config:
+        env_prefix = 'BUILDER_'
+        env_file_encoding = 'utf-8'
+
+
 RABBITMQ_CONFIG = RabbitMQSettings()
 RABBITMQ_QUEUE_CONFIG = RabbitMQQueueSettings()
 NOTICE_DB_CONFIG = NoticeDBSettings()
+BUILDER_CONFIG = BuilderSettings()
 BACKOFF_CONFIG = {'wait_gen': backoff.expo, 'exception': Exception, 'max_value': 128}

@@ -8,9 +8,9 @@ from notice.utils import get_template_params
 
 def insert_default_type_events(apps, schema_editor):
 
-    insert_one_type_event(apps, settings.EVENT_NEW_REVIEW_LIKES, subject='[Test] Event new review likes')
-    insert_one_type_event(apps, settings.EVENT_FORGOTTEN_BOOKMARKS, subject='[Test] Event forgotten bookmarks')
-    insert_one_type_event(apps, settings.EVENT_NEW_MOVIES_FOR_PERIOD, subject='[Test] Event new movies for period')
+    insert_one_type_event(apps, settings.EVENT_NEW_REVIEW_LIKES, subject='Событие о новом лайке')
+    insert_one_type_event(apps, settings.EVENT_FORGOTTEN_BOOKMARKS, subject='Событие о забытой закладке')
+    insert_one_type_event(apps, settings.EVENT_NEW_MOVIES_FOR_PERIOD, subject='Событие о фильме')
 
 
 def insert_one_type_event(apps, event: tuple, subject: str):
