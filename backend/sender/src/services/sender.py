@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from pathlib import Path
 from email import encoders
+from typing import Any
 import mimetypes
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -15,7 +16,7 @@ from aiosmtplib import SMTP, SMTPResponse
 
 class BaseSender(ABC):
     @abstractmethod
-    async def send(self, **kwargs) -> None:
+    async def send(self, *args, **kwargs) -> tuple[dict[str, Any], str]:
         """Метод отправки сообщения"""
 
 
@@ -77,7 +78,7 @@ class SmtpSender(BaseSender):
         return file
 
     async def send(
-        self, recipients: list[str], subject: str, data: str, file_path: Optional[str] = None, **kwargs
+        self, recipients: list[str], subject: str, data: str, file_path: Optional[str] = None, *args, **kwargs
     ) -> tuple[dict[str, SMTPResponse], str]:
         message = MIMEMultipart()
 

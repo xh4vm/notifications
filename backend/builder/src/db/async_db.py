@@ -18,6 +18,13 @@ class AsyncDB:
             max_size=20,
         )
 
+    async def __aenter__(self) -> 'AsyncDB':
+        await self.session.connect()
+        return self
+
+    async def __aexit__(self, *args, **kwargs) -> None:
+        await self.session.disconnect()
+
     async def execute(self, query: Select | Insert | Update | Delete) -> list[dict[str, Any]]:
         if query.is_select:
             return await self.session.fetch_all(query=query)
