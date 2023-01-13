@@ -6,8 +6,8 @@ x-base-service: &base_service
 
 x-base-rabbitmq: &base_rabbitmq
     volumes:
-      - ./backend/rabbitmq/.erlang.cookie:/var/lib/rabbitmq/.erlang.cookie
-      - ./backend/rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+      - ./rabbitmq/.erlang.cookie:/var/lib/rabbitmq/.erlang.cookie
+      - ./rabbitmq/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
       - rabbitmq_data:/var/lib/rabbitmq/
       - rabbitmq_log:/var/log/rabbitmq
     healthcheck:
@@ -83,7 +83,7 @@ services:
     hostname: haproxy
     image: haproxy:1.7
     volumes:
-      - ./backend/rabbitmq/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on:
       rabbitmq1:
         condition: service_healthy
@@ -250,6 +250,8 @@ services:
     restart: unless-stopped
     profiles: 
       - notice
+    volumes:
+      - mediafiles_volume:/opt/mediafiles/:ro
     depends_on:
       rabbitmq1:
         condition: service_healthy

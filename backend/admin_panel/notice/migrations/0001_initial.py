@@ -13,8 +13,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.RunSQL('create schema if not exists content;'),
@@ -25,8 +24,20 @@ class Migration(migrations.Migration):
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.TextField(max_length=255, verbose_name='Name')),
-                ('template_file', models.FileField(upload_to='emails_template/', validators=[notice.models.validate_file_contents])),
-                ('template_params', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, max_length=255, null=True), blank=True, null=True, size=None)),
+                ('subject', models.TextField(max_length=512, verbose_name='Subject')),
+                (
+                    'template_file',
+                    models.FileField(upload_to='emails_template/', validators=[notice.models.validate_file_contents]),
+                ),
+                (
+                    'template_params',
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(blank=True, max_length=255, null=True),
+                        blank=True,
+                        null=True,
+                        size=None,
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Type_event',
@@ -35,8 +46,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddIndex(
-            model_name='typeevent',
-            index=models.Index(fields=['name'], name='type_event_name_0b64a5_idx'),
+            model_name='typeevent', index=models.Index(fields=['name'], name='type_event_name_0b64a5_idx'),
         ),
         migrations.RunPython(insert_default_type_events),
         migrations.RunPython(create_default_beats),

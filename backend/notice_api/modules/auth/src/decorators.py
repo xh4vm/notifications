@@ -11,9 +11,7 @@ from modules.auth.src.exceptions.access import AccessException
 from modules.auth.src.services.access.local import AccessService
 
 
-def access_required(
-    permissions: dict[str, str], token_name: str = "x_authorization_token"
-):
+def access_required(permissions: dict[str, str], token_name: str = 'x_authorization_token'):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -25,14 +23,10 @@ def access_required(
             access_service = AccessService()
 
             for url, method in permissions.items():
-                response = access_service.is_accessible(
-                    token=token, method=method, url=url
-                )
+                response = access_service.is_accessible(token=token, method=method, url=url)
 
-                if not response.get("is_accessible"):
-                    raise AccessException(
-                        status=HTTPStatus.FORBIDDEN, message=response.get("message")
-                    )
+                if not response.get('is_accessible'):
+                    raise AccessException(status=HTTPStatus.FORBIDDEN, message=response.get('message'))
 
             return f(*args, **kwargs)
 
@@ -43,27 +37,19 @@ def access_required(
 
 def async_grpc_access_required(permissions: dict[str, str]):
     def decorator(f):
-        @backoff.on_exception(
-            **BACKOFF_CONFIG, exception=grpc.RpcError, logger=auth_logger
-        )
+        @backoff.on_exception(**BACKOFF_CONFIG, exception=grpc.RpcError, logger=auth_logger)
         @wraps(f)
         async def decorated_function(token: Optional[str], *args, **kwargs):
-            async with aio.insecure_channel(
-                target=f"{CONFIG.GRPC.HOST}:{CONFIG.GRPC.PORT}"
-            ) as channel:
+            async with aio.insecure_channel(target=f'{CONFIG.GRPC.HOST}:{CONFIG.GRPC.PORT}') as channel:
 
                 access_service = grpc_client_connector.AsyncAccessService(channel)
 
                 for url, method in permissions.items():
 
-                    response = await access_service.is_accessible(
-                        token=token, method=method, url=url
-                    )
+                    response = await access_service.is_accessible(token=token, method=method, url=url)
 
-                    if not response.get("is_accessible"):
-                        raise AccessException(
-                            status=HTTPStatus.FORBIDDEN, message=response.get("message")
-                        )
+                    if not response.get('is_accessible'):
+                        raise AccessException(status=HTTPStatus.FORBIDDEN, message=response.get('message'))
 
             return await f(*args, **kwargs)
 
@@ -74,26 +60,18 @@ def async_grpc_access_required(permissions: dict[str, str]):
 
 def grpc_access_required(permissions: dict[str, str]):
     def decorator(f):
-        @backoff.on_exception(
-            **BACKOFF_CONFIG, exception=grpc.RpcError, logger=auth_logger
-        )
+        @backoff.on_exception(**BACKOFF_CONFIG, exception=grpc.RpcError, logger=auth_logger)
         @wraps(f)
         def decorated_function(token: Optional[str], *args, **kwargs):
-            with grpc.insecure_channel(
-                target=f"{CONFIG.GRPC.HOST}:{CONFIG.GRPC.PORT}"
-            ) as channel:
+            with grpc.insecure_channel(target=f'{CONFIG.GRPC.HOST}:{CONFIG.GRPC.PORT}') as channel:
 
                 access_service = grpc_client_connector.AccessService(channel)
 
                 for url, method in permissions.items():
-                    response = access_service.is_accessible(
-                        token=token, method=method, url=url
-                    )
+                    response = access_service.is_accessible(token=token, method=method, url=url)
 
-                    if not response.get("is_accessible"):
-                        raise AccessException(
-                            status=HTTPStatus.FORBIDDEN, message=response.get("message")
-                        )
+                    if not response.get('is_accessible'):
+                        raise AccessException(status=HTTPStatus.FORBIDDEN, message=response.get('message'))
 
             return f(*args, **kwargs)
 

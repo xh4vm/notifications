@@ -10,14 +10,12 @@ from .base import RabbitMQEventManager
 
 
 class BaseConsumer(ABC):
-    
     @abstractmethod
     async def subscribe(self, **kwargs):
-        '''Метод отправляет событие в rabbit'''
+        """Метод отправляет событие в rabbit"""
 
 
 class RabbitMQConsumer(BaseConsumer, RabbitMQEventManager):
-
     def __init__(self, subscriber_queue: str, **kwargs) -> None:
         super().__init__(**kwargs)
         self.subscriber_queue = subscriber_queue
@@ -27,11 +25,7 @@ class RabbitMQConsumer(BaseConsumer, RabbitMQEventManager):
         async with self.channel_pool.acquire() as channel:
             await channel.set_qos(prefetch_count=10)
 
-            queue = await channel.declare_queue(
-                self.subscriber_queue,
-                durable=True,
-                auto_delete=False
-            )
+            queue = await channel.declare_queue(self.subscriber_queue, durable=True, auto_delete=False)
 
             async with queue.iterator() as queue_iter:
                 async for message in queue_iter:

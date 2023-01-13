@@ -8,7 +8,6 @@ from redis import Redis
 
 
 class KeyValueStorage(ABC):
-
     @abstractmethod
     def get_from(self, key: str, **kwargs):
         pass

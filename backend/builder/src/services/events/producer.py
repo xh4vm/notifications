@@ -8,14 +8,12 @@ from .base import RabbitMQEventManager
 
 
 class BaseProducer(ABC):
-    
     @abstractmethod
     async def publish(self, key: str, value, expire: int, **kwargs):
-        '''Метод отправляет событие в rabbit'''
+        """Метод отправляет событие в rabbit"""
 
 
 class RabbitMQProducer(BaseProducer, RabbitMQEventManager):
-
     def __init__(self, publisher_queue: str, **kwargs) -> None:
         super().__init__(**kwargs)
         self.publisher_queue = publisher_queue
@@ -29,15 +27,10 @@ class RabbitMQProducer(BaseProducer, RabbitMQEventManager):
 
             await ready_queue.bind(exchange, self.publisher_queue)
 
-            message = Message(
-                headers={'header': header},
-                body=payload,
-                delivery_mode=DeliveryMode.PERSISTENT,
-            )
+            message = Message(headers={'header': header}, body=payload, delivery_mode=DeliveryMode.PERSISTENT,)
 
             await exchange.publish(
-                message=message,
-                routing_key=self.publisher_queue,
+                message=message, routing_key=self.publisher_queue,
             )
 
             logger.info(f'Message publish to <{self.publisher_queue}>: body: <{payload.decode()}>')

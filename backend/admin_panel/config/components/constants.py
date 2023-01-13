@@ -1,5 +1,7 @@
 MAX_TEXT_FIELD_LENGTH = 255
-EVENT_TEMPLATE_DOCTYPE = ['<!DOCTYPE html>', ]
+EVENT_TEMPLATE_DOCTYPE = [
+    '<!DOCTYPE html>',
+]
 EVENT_TEMPLATE_PATTERN = r'<html.*>.*<\/html>'
 EVENT_TEMPLATE_PARAMS_PATTERN = r'{{\s(\w*)\s}}'
 URL_SCHEME = 'http://'

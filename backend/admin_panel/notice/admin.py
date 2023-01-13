@@ -13,8 +13,8 @@ class TypeEventAdmin(admin.ModelAdmin):
     """Displaying the TypeEvent model in the admin panel."""
 
     search_fields = ('name',)
-    fields = ['name', 'template_file', 'template_params', 'created']
-    list_display = ('name', 'template_file', 'template_params', 'created')
+    fields = ['name', 'subject', 'template_file', 'template_params', 'created']
+    list_display = ('name', 'subject', 'template_file', 'template_params', 'created')
     readonly_fields = ('id', 'created', 'modified', 'template_params')
 
     def save_model(self, request, obj, form, change):
@@ -58,10 +58,7 @@ class CreateManualMailing(admin.ModelAdmin):
 
         expires = start_time + timedelta(hours=25)
 
-        schedule, created = IntervalSchedule.objects.get_or_create(
-            every=4,
-            period=IntervalSchedule.HOURS,
-        )
+        schedule, created = IntervalSchedule.objects.get_or_create(every=4, period=IntervalSchedule.HOURS,)
         PeriodicTask.objects.get_or_create(
             interval=schedule,
             name='Task for mailing <{0}>, {1}, from {2} to {3}'.format(
@@ -71,7 +68,7 @@ class CreateManualMailing(admin.ModelAdmin):
                 expires.strftime('%d.%m.%Y %H:%M:%S'),
             ),
             task='notice.tasks.generator_event_manual_mailing',
-            args=json.dumps([obj.type_event.name, ]),
+            args=json.dumps([obj.type_event.name,]),
             start_time=start_time,
             expires=expires,
         )

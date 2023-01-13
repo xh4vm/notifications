@@ -14,8 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='typeevent',
-            options={'verbose_name': 'Type event', 'verbose_name_plural': 'Type events'},
+            name='typeevent', options={'verbose_name': 'Type event', 'verbose_name_plural': 'Type events'},
         ),
         migrations.CreateModel(
             name='CreateManualMailing',
@@ -25,7 +24,12 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('name', models.TextField(max_length=255, verbose_name='Name')),
                 ('date_to_send', models.DateField()),
-                ('type_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='notice.typeevent', verbose_name='Template')),
+                (
+                    'type_event',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to='notice.typeevent', verbose_name='Template'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Create manual mailing',
@@ -34,7 +38,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddIndex(
-            model_name='createmanualmailing',
-            index=models.Index(fields=['name'], name='create_manu_name_09da8b_idx'),
+            model_name='createmanualmailing', index=models.Index(fields=['name'], name='create_manu_name_09da8b_idx'),
         ),
     ]

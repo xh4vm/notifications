@@ -40,9 +40,9 @@ def validate_file_contents(value):
     first_line, rest_of_file = contents.split('\n', 1)
 
     if not validate_doctype(first_line):
-        raise ValidationError("File does not have valid doctype")
+        raise ValidationError('File does not have valid doctype')
     if not validate_template(rest_of_file):
-        raise ValidationError("The file does not contain correctly formatted html code.")
+        raise ValidationError('The file does not contain correctly formatted html code.')
 
     value.seek(0)
 
@@ -56,25 +56,19 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
     """Class for the type event model."""
 
     name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
-    template_file = models.FileField(
-        upload_to=settings.EMAILS_TEMPLATE_PATH,
-        validators=[validate_file_contents]
-    )
+    subject = models.TextField(_('Subject'), max_length=512)
+    template_file = models.FileField(upload_to=settings.EMAILS_TEMPLATE_PATH, validators=[validate_file_contents])
     template_params = ArrayField(
-        models.CharField(max_length=settings.MAX_TEXT_FIELD_LENGTH, blank=True, null=True),
-        blank=True,
-        null=True,
+        models.CharField(max_length=settings.MAX_TEXT_FIELD_LENGTH, blank=True, null=True), blank=True, null=True,
     )
 
     class Meta(object):
         """Class Meta for Genre."""
 
-        db_table = 'content\".\"type_event'
+        db_table = 'content"."type_event'
         verbose_name = _('Type event')
         verbose_name_plural = _('Type events')
-        indexes = [
-            models.Index(fields=['name'])
-        ]
+        indexes = [models.Index(fields=['name'])]
 
     def __str__(self):
         """Represent class Genre as string.
@@ -88,6 +82,7 @@ class TypeEvent(UUIDMixin, TimeStampedMixin):
 # post_delete.connect(
 #     file_cleanup, sender=TypeEvent, dispatch_uid="type_event.file_cleanup"
 # )
+
 
 @receiver(post_delete, sender=TypeEvent)
 def post_save_file(sender, instance, *args, **kwargs):
@@ -109,6 +104,7 @@ def pre_save_file(sender, instance, *args, **kwargs):
             new_file = None
         if new_file != old_file:
             import os
+
             if os.path.exists(old_file):
                 os.remove(old_file)
     except Exception:
@@ -119,19 +115,13 @@ class CreateManualMailing(UUIDMixin, TimeStampedMixin):
     """Class for the admin model."""
 
     name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
-    type_event = models.ForeignKey(
-        'TypeEvent',
-        on_delete=models.CASCADE,
-        verbose_name=_('Type event (template)'),
-    )
+    type_event = models.ForeignKey('TypeEvent', on_delete=models.CASCADE, verbose_name=_('Type event (template)'),)
     date_to_send = models.DateField(validators=[validate_date_to_send])
 
     class Meta(object):
         """Class Meta for Genre."""
 
-        db_table = 'content\".\"create_manual_mailing'
+        db_table = 'content"."create_manual_mailing'
         verbose_name = _('Create manual mailing')
         verbose_name_plural = _('Create manual mailings')
-        indexes = [
-            models.Index(fields=['name'])
-        ]
+        indexes = [models.Index(fields=['name'])]

@@ -10,15 +10,14 @@ from src.config.config import RabbitMQSettings, RABBITMQ_CONFIG
 class BaseEventManager(ABC):
     @abstractmethod
     async def get_connection(self):
-        '''Инициализация пулла соединений'''
+        """Инициализация пулла соединений"""
 
     @abstractmethod
     async def get_channel(self):
-        '''Инициализация пулла каналов'''
+        """Инициализация пулла каналов"""
 
 
 class RabbitMQEventManager(BaseEventManager):
-
     def __init__(self, settings: RabbitMQSettings = RABBITMQ_CONFIG, **kwargs):
         self._loop = asyncio.get_event_loop()
         self._settings = settings
@@ -28,7 +27,7 @@ class RabbitMQEventManager(BaseEventManager):
             host=self._settings.HOST,
             port=self._settings.PORT,
             login=self._settings.DEFAULT_USER,
-            password=self._settings.DEFAULT_PASS
+            password=self._settings.DEFAULT_PASS,
         )
 
     async def get_channel(self) -> Channel:

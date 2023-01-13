@@ -8,12 +8,12 @@ from notice.utils import get_template_params
 
 def insert_default_type_events(apps, schema_editor):
 
-    insert_one_type_event(apps, settings.EVENT_NEW_REVIEW_LIKES)
-    insert_one_type_event(apps, settings.EVENT_FORGOTTEN_BOOKMARKS)
-    insert_one_type_event(apps, settings.EVENT_NEW_MOVIES_FOR_PERIOD)
+    insert_one_type_event(apps, settings.EVENT_NEW_REVIEW_LIKES, subject='Событие о новом лайке')
+    insert_one_type_event(apps, settings.EVENT_FORGOTTEN_BOOKMARKS, subject='Событие о забытой закладке')
+    insert_one_type_event(apps, settings.EVENT_NEW_MOVIES_FOR_PERIOD, subject='Событие о фильме')
 
 
-def insert_one_type_event(apps, event: tuple):
+def insert_one_type_event(apps, event: tuple, subject: str):
 
     type_event = apps.get_model('notice', 'TypeEvent')
 
@@ -28,4 +28,6 @@ def insert_one_type_event(apps, event: tuple):
 
         params = get_template_params(content)
 
-    type_event.objects.get_or_create(name=event[0], template_file=file_template, template_params=params)
+    type_event.objects.get_or_create(
+        name=event[0], subject=subject, template_file=file_template, template_params=params
+    )

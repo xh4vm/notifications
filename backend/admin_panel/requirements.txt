@@ -1,6 +1,7 @@
 django==4.0.8
 django-split-settings==1.1.0
 django-debug-toolbar==3.5.0
+djangorestframework==3.14.0
 python-dotenv==0.20.0
 psycopg2-binary==2.9.3
 celery==5.2.7
