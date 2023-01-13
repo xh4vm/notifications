@@ -13,10 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = BASE_DIR.parent.parent
 load_dotenv(Path(ROOT_DIR, '.env'))
 
-include(
-    'components/database.py',
-    'components/constants.py'
-)
+include('components/database.py', 'components/constants.py')
 
 
 SECRET_KEY = environ.get('SECRET_KEY')
@@ -52,7 +49,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
@@ -78,18 +74,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
 
@@ -146,10 +134,7 @@ NOTICE_API_ENTRYPOINT = '{0}{1}:{2}{3}/{4}/{5}'.format(
 
 AUTH_API_AUTH_ENTRYPOINT = '{0}/auth'.format(environ.get('AUTH_API_URL'))
 AUTH_API_LOGIN_ENTRYPOINT = '{0}/login'.format(environ.get('AUTH_API_URL'))
-AUTH_API_LOGIN_PARAMS = json.dumps({
-        'login': environ.get('AUTH_API_USER'),
-        'password': environ.get('AUTH_API_PASS'),
-})
+AUTH_API_LOGIN_PARAMS = json.dumps({'login': environ.get('AUTH_API_USER'), 'password': environ.get('AUTH_API_PASS'), })
 
 FEEDBACKS_API_NEW_LIKES_ENTRYPOINT = '{0}/new_likes'.format(environ.get('FEEDBACKS_API_HOST'))
 FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT = '{0}/forgotten_bookmarks'.format(environ.get('FEEDBACKS_API_HOST'))

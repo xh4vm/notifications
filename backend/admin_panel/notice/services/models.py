@@ -72,8 +72,14 @@ class ResponseBoolResult(BaseMixin):
 
 class ResultResponse(BaseMixin):
     status: int
-    body: (NewReviewsLikes | list[ForgottenUserBookmarks] | NewMoviesForPeriod |
-           MoviesTokens | FilmName | ResponseBoolResult) = None
+    body: (
+        NewReviewsLikes
+        | list[ForgottenUserBookmarks]
+        | NewMoviesForPeriod
+        | MoviesTokens
+        | FilmName
+        | ResponseBoolResult
+    ) = None
 
 
 class GeneratorResponse(BaseMixin):

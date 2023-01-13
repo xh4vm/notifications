@@ -19,28 +19,23 @@ async def get_context(params: dict, model) -> EventMovies:
         return model(**params)
     except ValidationError as err:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail='Event context is not valid. Error: {0}'.format(err.args[0][0]),
+            status_code=HTTPStatus.BAD_REQUEST, detail='Event context is not valid. Error: {0}'.format(err.args[0][0]),
         )
 
 
 def fatal_error(err):
     raise HTTPException(
-            status_code=HTTPStatus.GATEWAY_TIMEOUT,
-            detail='The external service for API Service ({0}) is not available now'.format(
-                type(err['args'][0]).__name__
-            ),
+        status_code=HTTPStatus.GATEWAY_TIMEOUT,
+        detail='The external service for API Service ({0}) is not available now'.format(type(err['args'][0]).__name__),
     )
 
 
 def test_connection(func):
     @backoff.on_exception(
-        backoff.expo,
-        CONNECTION_EXCEPTIONS,
-        max_tries=SETTINGS.backoff_max_tries,
-        on_giveup=fatal_error,
+        backoff.expo, CONNECTION_EXCEPTIONS, max_tries=SETTINGS.backoff_max_tries, on_giveup=fatal_error,
     )
     @wraps(func)
     async def wrapper(*args, **kwargs):
         return await func(*args, **kwargs)
+
     return wrapper

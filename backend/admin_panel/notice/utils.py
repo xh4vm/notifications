@@ -38,8 +38,7 @@ def make_request(url, method, params, model):
         return ErrorResponse(status=status, body=body)
 
     result = ResultResponse(
-        status=status,
-        body=[model(**unit_body) for unit_body in body] if isinstance(body, list) else model(**body),
+        status=status, body=[model(**unit_body) for unit_body in body] if isinstance(body, list) else model(**body),
     )
 
     return result
@@ -60,30 +59,28 @@ def get_template_params(value: str) -> list:
 
 
 def fatal_error(err):
-    logger.error('Error: GATEWAY_TIMEOUT. The external service for API Service ({0}) is not available now'.format(
-        type(err['args'][0]).__name__)
+    logger.error(
+        'Error: GATEWAY_TIMEOUT. The external service for API Service ({0}) is not available now'.format(
+            type(err['args'][0]).__name__
+        )
     )
 
 
 def test_connection(func):
     @backoff.on_exception(
-        backoff.expo,
-        (ConnectionError, ),
-        max_tries=settings.BACKOFF_MAX_TRIES,
-        on_giveup=fatal_error,
+        backoff.expo, (ConnectionError,), max_tries=settings.BACKOFF_MAX_TRIES, on_giveup=fatal_error,
     )
     @wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
+
     return wrapper
 
 
 def get_token_exp(token) -> float | ErrorResponse:
     try:
         payload = jwt.decode(
-            jwt=token,
-            key=settings.AUTH_JWT_SECRET_KEY,
-            algorithms=settings.AUTH_JWT_DECODE_ALGORITHMS
+            jwt=token, key=settings.AUTH_JWT_SECRET_KEY, algorithms=settings.AUTH_JWT_DECODE_ALGORITHMS
         )
 
     except jwt.exceptions.InvalidSignatureError:
@@ -114,7 +111,7 @@ def create_time_zones_list(min_time: int = 0, max_time: int = 23) -> list[str]:
             result.append(time_zone_name)
 
         if min_time > max_time and (
-                min_time <= time_zone_time <= time(23, 59, 59) or time(0, 0, 0) <= time_zone_time <= max_time
+            min_time <= time_zone_time <= time(23, 59, 59) or time(0, 0, 0) <= time_zone_time <= max_time
         ):
             result.append(time_zone_name)
 

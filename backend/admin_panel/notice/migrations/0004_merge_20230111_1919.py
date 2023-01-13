@@ -10,5 +10,4 @@ class Migration(migrations.Migration):
         ('notice', '0003_alter_typeevent_template_file'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -10,11 +10,12 @@ class Context(BaseContext):
 
     @property
     async def context(self) -> dict[str, Any]:
-        '''Фейковые данные'''
+        """Фейковые данные"""
         return {
-        "user": "Fake user",
-        "list_of_films": ["Fake film1", "Fake film2", "Fake film3"],
-    }
+            'user': 'Fake user',
+            'list_of_films': ['Fake film1', 'Fake film2', 'Fake film3'],
+        }
+
 
 @dataclass
 class Recipients(BaseRecipients):
@@ -22,5 +23,5 @@ class Recipients(BaseRecipients):
 
     @property
     async def recipients(self) -> list[str]:
-        '''Фейковые данные'''
+        """Фейковые данные"""
         return ['xoklhyip@yandex.ru', 'h4vm@yandex.ru']

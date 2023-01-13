@@ -28,4 +28,6 @@ def insert_one_type_event(apps, event: tuple, subject: str):
 
         params = get_template_params(content)
 
-    type_event.objects.get_or_create(name=event[0], subject=subject, template_file=file_template, template_params=params)
+    type_event.objects.get_or_create(
+        name=event[0], subject=subject, template_file=file_template, template_params=params
+    )

@@ -1,9 +1,11 @@
 from config.celery import app as celery_app
 from django.conf import settings
-from notice.services.services import (send_create_manual_mailing_event,
-                                      send_event_forgotten_bookmarks,
-                                      send_event_new_movies_for_period,
-                                      send_event_new_review_likes)
+from notice.services.services import (
+    send_create_manual_mailing_event,
+    send_event_forgotten_bookmarks,
+    send_event_new_movies_for_period,
+    send_event_new_review_likes,
+)
 
 
 @celery_app.task

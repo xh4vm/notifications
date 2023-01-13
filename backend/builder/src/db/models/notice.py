@@ -14,8 +14,6 @@ class TypeEvent(BaseModel):
 class CreateManualMailing(BaseModel):
     name = Column(String(256), nullable=False, unique=True)
     type_event_id = Column(
-        String(128).with_variant(UUID(as_uuid=True), 'postgresql'),
-        ForeignKey('type_event.id'),
-        nullable=False
+        String(128).with_variant(UUID(as_uuid=True), 'postgresql'), ForeignKey('type_event.id'), nullable=False
     )
     date_to_send = Column(Date())

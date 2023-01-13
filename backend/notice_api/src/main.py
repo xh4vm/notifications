@@ -51,10 +51,7 @@ async def shutdown():
 
 @app.exception_handler(AccessException)
 def authjwt_exception_handler(request: Request, exc: AccessException):
-    return JSONResponse(
-        status_code=exc.status,
-        content={"detail": exc.message}
-    )
+    return JSONResponse(status_code=exc.status, content={'detail': exc.message})
 
 
 app.include_router(events.router, prefix='/api/v1/events')
@@ -62,9 +59,5 @@ app.include_router(events.router, prefix='/api/v1/events')
 
 if __name__ == '__main__':
     uvicorn.run(
-        'main:app',
-        host='127.0.0.1',
-        port=SETTINGS.notice_api_port,
-        log_config=LOGGING,
-        log_level=logging.DEBUG,
+        'main:app', host='127.0.0.1', port=SETTINGS.notice_api_port, log_config=LOGGING, log_level=logging.DEBUG,
     )

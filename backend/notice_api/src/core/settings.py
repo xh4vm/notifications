@@ -16,7 +16,7 @@ class RabbitMQSettings(BaseSettings):
     class Config:
         env_prefix = 'RABBITMQ_'
         env_file = Path(ROOT_DIR, '.env')
-        env_file_encoding = "utf-8"
+        env_file_encoding = 'utf-8'
 
 
 class Settings(BaseSettings):

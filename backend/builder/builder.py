@@ -2,7 +2,6 @@ import asyncio
 import orjson
 from loguru import logger
 from typing import Any
-from sqlalchemy import select
 
 from src.config.config import NOTICE_DB_CONFIG, RABBITMQ_QUEUE_CONFIG
 from src.services.events.consumer import RabbitMQConsumer
@@ -28,17 +27,13 @@ async def message_handler(message: dict[str, Any]):
 
     message = await jinja2_rd.render(template=template.body, data=context)
 
-    payload = orjson.dumps({
-        'subject': template.subject,
-        'recipients': recipients,
-        'message': message,
-    })
+    payload = orjson.dumps({'subject': template.subject, 'recipients': recipients, 'message': message, })
     await producer.publish(header='', payload=payload)
 
 
 async def builder():
     logger.info('Starting builder process...')
-    
+
     await consumer.subscribe(callback=message_handler)
 
 

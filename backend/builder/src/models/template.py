@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TemplateDB(BaseModel):
@@ -7,5 +7,5 @@ class TemplateDB(BaseModel):
 
 
 class Template(BaseModel):
-    subject: str
-    body: str
+    subject: str = Field(default="")
+    body: str = Field(default="")

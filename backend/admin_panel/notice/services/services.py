@@ -5,15 +5,25 @@ from db.redis_storage import redis_storage
 from django.conf import settings
 from loguru import logger
 from notice.fake_api_request import (
-    _make_request_auth, _make_request_content_get_film_name,
+    _make_request_auth,
+    _make_request_content_get_film_name,
     _make_request_content_new_movies_for_period,
-    _make_request_feedbacks_forgotten_bookmarks, _make_request_feedbacks_likes,
-    mock_api_request)
-from notice.services.models import (ErrorResponse, FilmName,
-                                    ForgottenUserBookmarks, GeneratorResponse,
-                                    MovieEvent, MoviesTokens,
-                                    NewMoviesForPeriod, NewReviewLikesOut,
-                                    NewReviewsLikes, ResponseBoolResult)
+    _make_request_feedbacks_forgotten_bookmarks,
+    _make_request_feedbacks_likes,
+    mock_api_request,
+)
+from notice.services.models import (
+    ErrorResponse,
+    FilmName,
+    ForgottenUserBookmarks,
+    GeneratorResponse,
+    MovieEvent,
+    MoviesTokens,
+    NewMoviesForPeriod,
+    NewReviewLikesOut,
+    NewReviewsLikes,
+    ResponseBoolResult,
+)
 from notice.utils import create_time_zones_list, get_token_exp, make_request
 from redis import Redis
 
@@ -40,7 +50,7 @@ def send_to_notice_api(name_source, name_event, data):
         method='post',
         params={
             'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
-            'data': message_to_queue.json(exclude={'film_id'})
+            'data': message_to_queue.json(exclude={'film_id'}),
         },
         model=ResponseBoolResult,
     )
@@ -54,10 +64,7 @@ def send_to_notice_api(name_source, name_event, data):
         'Send to API Notice with result Status <{0}>. Body: {1}'.format(result_request.status, result_request.body)
     )
 
-    return GeneratorResponse(
-        event=message_to_queue,
-        api_notice_response=result_request
-    )
+    return GeneratorResponse(event=message_to_queue, api_notice_response=result_request)
 
 
 def set_tokens_to_storage(body: MoviesTokens) -> bool | ErrorResponse:
@@ -115,9 +122,7 @@ def get_new_likes(make_request_func, access_token):
     return make_request_func(
         url=settings.FEEDBACKS_API_NEW_LIKES_ENTRYPOINT,
         method='get',
-        params={
-            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
-        },
+        params={'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)}, },
         model=NewReviewsLikes,
     )
 
@@ -129,7 +134,7 @@ def get_film_name(make_request_func, access_token, film_id):
         method='get',
         params={
             'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
-            'data': {'film_id': film_id}
+            'data': {'film_id': film_id},
         },
         model=FilmName,
     )
@@ -145,9 +150,7 @@ def get_forgotten_bookmarks(make_request_func, access_token):
     return make_request_func(
         url=settings.FEEDBACKS_API_FORGOTTEN_BOOKMARKS_ENTRYPOINT,
         method='get',
-        params={
-            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
-        },
+        params={'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)}, },
         model=ForgottenUserBookmarks,
     )
 
@@ -157,10 +160,7 @@ def get_new_movies_for_period(make_request_func, access_token, days):
     return make_request_func(
         url=settings.CONTENT_API_NEW_MOVIES,
         method='get',
-        params={
-            'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)},
-            'data': {'days': days}
-        },
+        params={'headers': {settings.AUTH_JWT_HEADER_NAME: 'Bearer {0}'.format(access_token)}, 'data': {'days': days}},
         model=NewMoviesForPeriod,
     )
 
@@ -185,9 +185,7 @@ def send_event_new_review_likes() -> GeneratorResponse | ErrorResponse | list[Ge
     for new_review_likes in result_request.body.new_reviews_likes:
 
         film_name = get_film_name(
-            make_request_func=make_request,
-            access_token=access_token,
-            film_id=new_review_likes.film_id,
+            make_request_func=make_request, access_token=access_token, film_id=new_review_likes.film_id,
         )
 
         if isinstance(film_name, ErrorResponse):
@@ -232,9 +230,7 @@ def send_event_forgotten_bookmarks():
     for user_forgotten_bookmarks in result_request.body:
         send_to_notice_api_results.append(
             send_to_notice_api(
-                'Generator get_forgotten_bookmarks',
-                settings.EVENT_FORGOTTEN_BOOKMARKS[0],
-                user_forgotten_bookmarks
+                'Generator get_forgotten_bookmarks', settings.EVENT_FORGOTTEN_BOOKMARKS[0], user_forgotten_bookmarks
             )
         )
 
@@ -251,19 +247,13 @@ def send_event_new_movies_for_period(days):
     if isinstance(access_token, ErrorResponse):
         return access_token
 
-    result_request = get_new_movies_for_period(
-        make_request_func=make_request,
-        access_token=access_token,
-        days=days,
-    )
+    result_request = get_new_movies_for_period(make_request_func=make_request, access_token=access_token, days=days,)
 
     if isinstance(result_request, ErrorResponse):
         return result_request
 
     return send_to_notice_api(
-        'Generator get_new_movies_for_period',
-        settings.EVENT_NEW_MOVIES_FOR_PERIOD[0],
-        result_request.body,
+        'Generator get_new_movies_for_period', settings.EVENT_NEW_MOVIES_FOR_PERIOD[0], result_request.body,
     )
 
 

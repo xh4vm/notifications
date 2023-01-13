@@ -1,10 +1,10 @@
 from typing import Any
 
 from src.models.event_type import EventTypeEnum
+from src.models.template import Template
 from .new_review_likes import Context as ContextReviewsLikes, Recipients as RecipientsReviewsLikes
 from .new_movies_for_period import Context as ContextMoviesPeriod, Recipients as RecipientsMoviesPeriod
 from .foggoten_bookmaks import Context as ContextFoggotenBookmarks, Recipients as RecipientsFoggotenBookmarks
-
 
 
 async def get_context(event_name: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -19,9 +19,9 @@ async def get_context(event_name: str, data: dict[str, Any]) -> dict[str, Any]:
             ctx = ContextFoggotenBookmarks(data)
 
         case _:
-            raise ValueError('Undefined event type')
+            return Template()
 
-    return await ctx.context 
+    return await ctx.context
 
 
 async def get_recipients(event_name: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -36,6 +36,6 @@ async def get_recipients(event_name: str, data: dict[str, Any]) -> dict[str, Any
             ctx = RecipientsFoggotenBookmarks(data)
 
         case _:
-            raise ValueError('Undefined event type')
+            return Template()
 
-    return await ctx.recipients 
+    return await ctx.recipients

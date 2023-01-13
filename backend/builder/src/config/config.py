@@ -31,7 +31,7 @@ class RabbitMQSettings(BaseSettings):
         env_prefix = 'RABBITMQ_'
         env_file_encoding = 'utf-8'
 
-    
+
 class RabbitMQQueueSettings(BaseSettings):
     BUILDER: str
     SENDER: str

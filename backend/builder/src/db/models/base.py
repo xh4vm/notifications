@@ -10,13 +10,16 @@ from sqlalchemy.ext.declarative import declared_attr
 
 Base = declarative_base()
 
+
 class BaseModel(Base):
     """Базовая модель объекта БД"""
 
     __abstract__ = True
     __table_args__ = {'schema': NOTICE_DB_CONFIG.SCHEMA_NAME}
 
-    id: int = Column(String(128).with_variant(UUID(as_uuid=True), 'postgresql'), nullable=False, unique=True, primary_key=True)
+    id: int = Column(
+        String(128).with_variant(UUID(as_uuid=True), 'postgresql'), nullable=False, unique=True, primary_key=True
+    )
     created_at: datetime = Column(TIMESTAMP(timezone=True), nullable=False, default=datetime.utcnow)
     updated_at: datetime = Column(
         TIMESTAMP(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

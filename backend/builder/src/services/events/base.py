@@ -1,27 +1,23 @@
 import asyncio
-import backoff
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
-from loguru import logger
 from aio_pika import connect_robust, Channel
 from aio_pika.pool import Pool
 from aio_pika.abc import AbstractRobustConnection
 
-from src.config.config import BACKOFF_CONFIG, RabbitMQSettings, RABBITMQ_CONFIG
+from src.config.config import RabbitMQSettings, RABBITMQ_CONFIG
 
 
 class BaseEventManager(ABC):
     @abstractmethod
     async def get_connection(self):
-        '''Инициализация пулла соединений'''
+        """Инициализация пулла соединений"""
 
     @abstractmethod
     async def get_channel(self):
-        '''Инициализация пулла каналов'''
+        """Инициализация пулла каналов"""
 
 
 class RabbitMQEventManager(BaseEventManager):
-
     def __init__(self, settings: RabbitMQSettings = RABBITMQ_CONFIG, **kwargs):
         self._loop = asyncio.get_event_loop()
         self._settings = settings
@@ -31,7 +27,7 @@ class RabbitMQEventManager(BaseEventManager):
             host=self._settings.HOST,
             port=self._settings.PORT,
             login=self._settings.DEFAULT_USER,
-            password=self._settings.DEFAULT_PASS
+            password=self._settings.DEFAULT_PASS,
         )
 
     async def get_channel(self) -> Channel:

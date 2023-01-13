@@ -43,6 +43,13 @@ class EventMovies(BaseMixin):
     time_zone: list[str] | None
     name_of_event_source: str
     name_type_event: str
-    context: (NewReviewsLikes | EventNewEpisode | EventFromAdmin |
-              list[FilmInBookmark] | NewFilmsInPeriod | EventNewUser | None)
+    context: (
+        NewReviewsLikes
+        | EventNewEpisode
+        | EventFromAdmin
+        | list[FilmInBookmark]
+        | NewFilmsInPeriod
+        | EventNewUser
+        | None
+    )
     created: datetime

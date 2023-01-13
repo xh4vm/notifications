@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
@@ -8,7 +7,6 @@ from src.models.events import EventMovies
 
 
 class BaseProducerService(ABC):
-
     @abstractmethod
     async def send_event(self, params: dict, **kwargs):
         pass
@@ -32,9 +30,7 @@ class RabbitMQProducerService(BaseProducerService):
 
 
 @lru_cache()
-def get_event_service(
-        producer: RabbitMQProducer = Depends(get_producer),
-) -> RabbitMQProducerService:
+def get_event_service(producer: RabbitMQProducer = Depends(get_producer),) -> RabbitMQProducerService:
     """ Get RabbitMQProducerService object.
 
     Arguments:

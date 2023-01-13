@@ -20,6 +20,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='createmanualmailing',
             name='type_event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='notice.typeevent', verbose_name='Type event (template)'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='notice.typeevent',
+                verbose_name='Type event (template)',
+            ),
         ),
     ]

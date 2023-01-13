@@ -22,10 +22,10 @@ URL = f'{SETTINGS.notice_api_host}:{SETTINGS.notice_api_port}\
     tags=['Events'],
 )
 async def send_event(
-        request: Request,
-        current_user_id: str = Depends(UserAccessRequired(permissions={URL: 'POST'})),
-        params: EventParams = Depends(),
-        obj_service: RabbitMQProducerService = Depends(get_event_service),
+    request: Request,
+    current_user_id: str = Depends(UserAccessRequired(permissions={URL: 'POST'})),
+    params: EventParams = Depends(),
+    obj_service: RabbitMQProducerService = Depends(get_event_service),
 ) -> ResponseBoolResult:
     """ Send event to queue
 
