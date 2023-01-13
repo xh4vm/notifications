@@ -26,6 +26,16 @@ class NewReviewLikes(BaseMixin):
     likes: list[str]
 
 
+class UserReviewsLikes(BaseMixin):
+    film_id: str
+    likes: list[str]
+
+
+class NewUserReviewsLikes(BaseMixin):
+    user_id: str
+    user_likes: UserReviewsLikes
+
+
 class FilmName(BaseMixin):
     film_id: str
     film_name: str
