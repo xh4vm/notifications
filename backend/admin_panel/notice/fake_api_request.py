@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
@@ -43,18 +44,63 @@ def _make_request_feedbacks_likes(url, method, params, model):
             new_reviews_likes=[
                 {
                     'user_id': uuid_str(),
-                    'film_id': uuid_str(),
-                    'likes': [uuid_str(), uuid_str(), uuid_str(), uuid_str()],
+                    'user_reviews': [
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                    ]
                 },
                 {
                     'user_id': uuid_str(),
-                    'film_id': uuid_str(),
-                    'likes': [uuid_str(), uuid_str(), uuid_str(), uuid_str()],
+                    'user_reviews': [
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                    ]
                 },
                 {
                     'user_id': uuid_str(),
-                    'film_id': uuid_str(),
-                    'likes': [uuid_str(), uuid_str(), uuid_str(), uuid_str()],
+                    'user_reviews': [
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                        {
+                            'review_id': uuid_str(),
+                            'film': uuid_str(),
+                            'number_likes': random.randint(0, 1000),
+                        },
+                    ]
                 },
             ],
         ),

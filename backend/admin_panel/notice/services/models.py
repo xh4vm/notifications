@@ -20,10 +20,15 @@ class BaseMixin(BaseModel):
         cache_free = False
 
 
-class NewReviewLikes(BaseMixin):
+class UserLikesOfReview(BaseMixin):
+    review_id: str
+    film: str
+    number_likes: int
+
+
+class UserReviews(BaseMixin):
     user_id: str
-    film_id: str
-    likes: list[str]
+    user_reviews: list[UserLikesOfReview]
 
 
 class FilmName(BaseMixin):
@@ -33,14 +38,13 @@ class FilmName(BaseMixin):
 
 class NewReviewsLikes(BaseMixin):
     request_date: datetime
-    new_reviews_likes: list[NewReviewLikes]
+    new_reviews_likes: list[UserReviews]
 
 
 class NewReviewLikesOut(BaseMixin):
     request_date: datetime
     user_id: str
-    film_name: str = None
-    likes: list[str]
+    user_reviews: list[UserLikesOfReview]
 
 
 class ForgottenUserBookmarks(BaseMixin):
@@ -54,7 +58,6 @@ class NewMoviesForPeriod(BaseMixin):
 
 
 class MovieEvent(BaseMixin):
-    time_zone: list[str]
     name_of_event_source: str
     name_type_event: str
     context: NewReviewLikesOut | ForgottenUserBookmarks | NewMoviesForPeriod | None

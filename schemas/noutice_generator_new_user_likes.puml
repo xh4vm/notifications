@@ -1,0 +1,137 @@
+	@startuml
+autonumber
+skinparam sequence {
+	ParticipantPadding 20
+	MessageAlign center
+}
+
+title New User's Reviews Likes
+
+participant "Celery-beat" as cb order 5
+participant "Generator New user's reviews likes" as gen order 10
+database Redis as redis order 15
+participant Builder as b order 20 #FFFF99
+collections "API Auth" as api_a order 25
+collections "API Content" as api_c order 30
+collections "API Feedbacks" as api_f order 35
+participant "API Notice" as api_n order 40
+queue RabbitMQ as q order 45
+participant Sender as s order 50 #FFFF99
+database NoticeDB as db order 60
+collections Emails as em order 70 #99FF99
+
+
+cb -> gen: Start Periodic task
+
+group #eafaea Generate event
+group #d6f5d6 Get access token
+gen -> redis: get access token
+return access_token
+alt not exist access_token
+gen -> redis: get refresh_token
+return refresh_token
+alt not exist refresh_token
+gen -> api_a: POST login, password
+return: access_token, refresh_token
+else
+gen -> api_a: PUT {refresh_token}
+return: access_token, refresh_token
+end
+gen -> redis: SET access_token, refresh_token
+return done
+end
+end group
+
+gen -> api_f: get user's reviews new likes
+return new_users_reviews_likes
+note left
+likes_request_date: datetime
+users: [
+{
+	user_ID: uuid
+	user_reviews: [
+		{
+		review_id: id
+		film_id: uuid
+		number_likes: int
+		},
+		...
+	]
+},
+...
+]
+end note
+group #d6f5d6 send messages in API Notice
+loop user in new_users_reviews_likes.users
+loop review in user.user_reviews
+gen -> api_c: get film_name (film_id)
+return film_name
+gen -> api_n: access_token, event
+note left
+name_source: str,
+name_event: str,
+context: {
+	likes_request_date,
+user_id,
+	user_reviews: [
+		{
+		review_id: uuid
+		film: film_name
+		number_likes: int
+		},
+		...
+	]
+}
+
+end note
+end loop
+end loop
+end group
+end group
+
+api_n -> q: send messages to queue
+
+group #ebfafa Build email
+loop #c2f0f0 for message in queue
+q -> b: message
+b -> api_a: get user data
+note left
+user_id,
+name_event: str,
+end note
+return user
+note left
+None if not permissions for this event or inappropriate timezone
+user_email, user_name
+end note
+alt #c2f0f0 user not None
+b -> db: get type_event data (message.name_event)
+return type_event data
+note left
+subject, template
+end note
+b -> b: render email_text
+b -> q: email_message_for_send
+note right
+message.likes_request_date,
+message.review_id,
+email_text
+end note
+end alt
+end loop
+end group
+
+loop #fff2e6 Send email
+q -> s: message
+s -> em: message
+em -> s: OK
+s -> api_f: set likes_request_date for review
+note right
+message.review_id,
+likes_request_date
+end note
+end loop
+
+
+
+@enduml

@@ -116,6 +116,7 @@ class CreateManualMailing(UUIDMixin, TimeStampedMixin):
 
     name = models.TextField(_('Name'), max_length=settings.MAX_TEXT_FIELD_LENGTH)
     type_event = models.ForeignKey('TypeEvent', on_delete=models.CASCADE, verbose_name=_('Type event (template)'),)
+    users_filter = models.TextField(_('UsersFilter'), max_length=settings.MAX_TEXT_FIELD_LENGTH, blank=True, null=True)
     date_to_send = models.DateField(validators=[validate_date_to_send])
 
     class Meta(object):
