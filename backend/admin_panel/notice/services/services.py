@@ -5,26 +5,17 @@ from db.redis_storage import redis_storage
 from django.conf import settings
 from loguru import logger
 from notice.fake_api_request import (
-    _make_request_auth,
-    _make_request_content_get_film_name,
+    _make_request_auth, _make_request_content_get_film_name,
     _make_request_content_new_movies_for_period,
-    _make_request_feedbacks_forgotten_bookmarks,
-    _make_request_feedbacks_likes,
-    mock_api_request,
-)
-from notice.services.models import (
-    ErrorResponse,
-    FilmName,
-    ForgottenUserBookmarks,
-    GeneratorResponse,
-    MovieEvent,
-    MoviesTokens,
-    NewMoviesForPeriod,
-    NewReviewLikesOut,
-    NewReviewsLikes,
-    ResponseBoolResult,
-)
-from notice.utils import create_time_zones_list, get_token_exp, make_request
+    _make_request_feedbacks_forgotten_bookmarks, _make_request_feedbacks_likes,
+    mock_api_request)
+from notice.services.models import (ErrorResponse, FilmName,
+                                    ForgottenUserBookmarks, GeneratorResponse,
+                                    MovieEvent, MoviesTokens,
+                                    NewMoviesForPeriod, NewReviewLikesOut,
+                                    NewReviewsLikes, ResponseBoolResult,
+                                    UserReviews)
+from notice.utils import get_token_exp, make_request
 from redis import Redis
 
 redis_storage.storage = Redis(**settings.KEY_VALUE_DB_SETTINGS)
@@ -38,7 +29,6 @@ def send_to_notice_api(name_source, name_event, data):
         return access_token
 
     message_to_queue = MovieEvent(
-        time_zone=create_time_zones_list(min_time=settings.RECIPIENT_MIN_TIME, max_time=settings.RECIPIENT_MAX_TIME),
         name_of_event_source=name_source,
         name_type_event=name_event,
         context=data,
@@ -127,6 +117,18 @@ def get_new_likes(make_request_func, access_token):
     )
 
 
+def set_film_name(user_reviews_likes: UserReviews, access_token: str):
+    for review in user_reviews_likes.user_reviews:
+        film_name = get_film_name(
+            make_request_func=make_request, access_token=access_token, film_id=review.film,
+        )
+        if isinstance(film_name, ErrorResponse):
+            logger.error('Event Error. Status {0}. Body {1}'.format(film_name.status, film_name.body))
+            continue
+
+        review.film = film_name
+
+
 @mock_api_request(_make_request_content_get_film_name)
 def get_film_name(make_request_func, access_token, film_id):
     result = make_request_func(
@@ -182,21 +184,14 @@ def send_event_new_review_likes() -> GeneratorResponse | ErrorResponse | list[Ge
 
     send_to_notice_api_results = []
 
-    for new_review_likes in result_request.body.new_reviews_likes:
+    for user_reviews_likes in result_request.body.new_reviews_likes:
 
-        film_name = get_film_name(
-            make_request_func=make_request, access_token=access_token, film_id=new_review_likes.film_id,
-        )
-
-        if isinstance(film_name, ErrorResponse):
-            logger.error('Event Error. Status {0}. Body {1}'.format(result_request.status, result_request.body))
-            continue
+        set_film_name(user_reviews_likes, access_token)
 
         new_reviews_likes_out = NewReviewLikesOut(
             request_date=result_request.body.request_date,
-            user_id=new_review_likes.user_id,
-            film_name=film_name,
-            likes=new_review_likes.likes,
+            user_id=user_reviews_likes.user_id,
+            user_reviews=user_reviews_likes.user_reviews,
         )
 
         send_to_notice_api_results.append(
@@ -257,6 +252,6 @@ def send_event_new_movies_for_period(days):
     )
 
 
-def send_create_manual_mailing_event(event_name):
+def send_create_manual_mailing_event(event_name, users_filter):
 
-    return send_to_notice_api('Generator manual mailing event', event_name, None)
+    return send_to_notice_api('Generator manual mailing event', event_name, {'users_filter': users_filter})

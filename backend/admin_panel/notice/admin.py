@@ -11,7 +11,6 @@ from .utils import get_template_params
 @admin.register(TypeEvent)
 class TypeEventAdmin(admin.ModelAdmin):
     """Displaying the TypeEvent model in the admin panel."""
-
     search_fields = ('name',)
     fields = ['name', 'subject', 'template_file', 'template_params', 'created']
     list_display = ('name', 'subject', 'template_file', 'template_params', 'created')

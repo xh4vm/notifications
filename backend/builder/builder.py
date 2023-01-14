@@ -12,15 +12,15 @@ from src.services.enrich.handler import get_context, get_recipients
 from src.db.async_db import AsyncDB
 from src.models.template import Template
 
-
-db = AsyncDB(settings=NOTICE_DB_CONFIG)
-jinja2_rd = Jinja2Renderer()
+jinja2_rd: Jinja2Renderer = Jinja2Renderer()
+db: AsyncDB = AsyncDB(settings=NOTICE_DB_CONFIG)
 consumer: RabbitMQConsumer = RabbitMQConsumer(subscriber_queue=RABBITMQ_QUEUE_CONFIG.BUILDER)
 producer: RabbitMQProducer = RabbitMQProducer(publisher_queue=RABBITMQ_QUEUE_CONFIG.SENDER)
 
 
 async def message_handler(message: dict[str, Any]):
-    template: Template = await get_template(db=db, name_type_event=message.get('name_type_event'))
+    async with db as conn:
+        template: Template = await get_template(db=conn, name_type_event=message.get('name_type_event'))
 
     context = await get_context(event_name=message.get('name_type_event'), data=message.get('context'))
     recipients = await get_recipients(event_name=message.get('name_type_event'), data=message.get('context'))

@@ -1,0 +1,70 @@
+@startuml
+autonumber
+skinparam sequence {
+	ParticipantPadding 30
+	MessageAlign center
+}
+
+title New event from Event's Generator
+
+participant Scheduler as sch order 10
+participant Generator as gen order 20
+collections APIs as api_m order 25
+participant APINotice as api_n order 30
+queue RabbitMQ as q order 40
+participant Builder as b order 45
+participant Sender as s order 50
+collections "API Auth" as api_a order 55
+database NoticeDB as db order 60
+collections Emails as em order 70 #99FF99
+
+
+sch -> gen: start
+gen -> api_m: get data
+return data
+gen -> gen: create event
+gen -> api_n: send event with data
+api_n -> q: NewEvent
+q -> b: NewEvent
+
+group #ebfafa Build email
+loop #c2f0f0 for message in queue
+q -> b: message
+b -> api_a: get user data
+note left
+users_filter,
+name_event: str,
+end note
+return user
+note left
+None if not permissions for this event or inappropriate timezone
+user_email, user_name
+end note
+alt #c2f0f0 user not None
+b -> db: get type_event data (message.name_event)
+return type_event data
+note left
+subject, template
+end note
+b -> b: render email_text
+b -> q: email_message_for_send
+note right
+message.likes_request_date,
+message.review_id,
+email_text
+end note
+end alt
+end loop
+end group
+
+loop #fff2e6 Send email
+q -> s: message
+s -> em: message
+em -> s: OK
+note right
+message.review_id,
+likes_request_date
+end note
+end loop
+
+@enduml

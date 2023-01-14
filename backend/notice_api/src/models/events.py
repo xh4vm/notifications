@@ -13,18 +13,24 @@ class EventNewEpisode(BaseMixin):
 
 
 class EventFromAdmin(BaseMixin):
-    time_zone: list[str]
+    user_filter: str
 
 
-class NewLikesOfReview(BaseMixin):
+class UserLikesOfReview(BaseMixin):
+    review_id: str
+    film: str
+    number_likes: int
+
+
+class UserReviews(BaseMixin):
     user_id: str
-    film_name: str
-    likes: list[str]
+    user_reviews: list[UserLikesOfReview]
 
 
 class NewReviewsLikes(BaseMixin):
     request_date: datetime
-    new_reviews_likes: NewLikesOfReview
+    user_id: str
+    user_reviews: list[UserLikesOfReview]
 
 
 class FilmInBookmark(BaseMixin):
@@ -40,7 +46,6 @@ class NewFilmsInPeriod(BaseMixin):
 class EventMovies(BaseMixin):
     """Class for event model."""
 
-    time_zone: list[str] | None
     name_of_event_source: str
     name_type_event: str
     context: (
